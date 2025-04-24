@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulário de Orçamento - LOCAUTENSÍLIOS</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #4A6FFF;
+      --secondary-color: #6C7AE0;
+      --text-color: #333;
+      --light-gray: #f5f7fa;
+      --border-color: #e1e5eb;
+      --success-color: #34c759;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      --radius: 8px;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    
+    body {
+      background-color: #f9fafb;
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 10px;
+    }
+    
+    .form-container {
+      max-width: 1000px;
+      margin: 10px auto;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    
+    h1 {
+      color: var(--primary-color);
+      margin-bottom: 20px;
+      font-weight: 600;
+      font-size: 20px;
+      text-align: center;
+    }
+    
+    .form-header {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #4a5568;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      font-size: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 0 3px rgba(108, 122, 224, 0.15);
+    }
+    
+    /* Tabela responsiva */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+      margin-bottom: 20px;
+      -webkit-overflow-scrolling: touch; /* Para melhor rolagem em dispositivos iOS */
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 500px; /* Garante que a tabela tenha um tamanho mínimo */
+    }
+    
+    thead {
+      background-color: var(--primary-color);
+      color: white;
+    }
+    
+    th {
+      text-align: left;
+      padding: 12px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    td {
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    /* Nas telas menores, ajuste os inputs dentro da tabela */
+    td input {
+      padding: 8px;
+      font-size: 14px;
+    }
+    
+    .product-row {
+      background-color: white;
+      transition: background-color 0.2s;
+    }
+    
+    .product-row:hover {
+      background-color: var(--light-gray);
+    }
+    
+    .produto-total {
+      font-weight: 500;
+    }
+
+    /* Layout para telas menores */
+    @media (max-width: 768px) {
+      /* Estilo específico para visualização em cards em dispositivos móveis */
+      .mobile-card {
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        padding: 15px;
+        margin-bottom: 15px;
+        background-color: white;
+      }
+      
+      .mobile-card-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        align-items: center;
+      }
+      
+      .mobile-card-title {
+        font-weight: 600;
+        font-size: 16px;
+      }
+      
+      .mobile-card-number {
+        background-color: var(--primary-color);
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+      }
+      
+      .mobile-card-content {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .mobile-card-field {
+        margin-bottom: 8px;
+      }
+      
+      .mobile-card-label {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 4px;
+        display: block;
+      }
+      
+      .mobile-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-color);
+      }
+      
+      .desktop-table {
+        display: none;
+      }
+      
+      .mobile-cards {
+        display: block;
+      }
+    }
+    
+    @media (min-width: 769px) {
+      .desktop-table {
+        display: block;
+      }
+      
+      .mobile-cards {
+        display: none;
+      }
+      
+      .form-header {
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      
+      .form-group {
+        flex: 1 1 300px;
+      }
+      
+      h1 {
+        font-size: 24px;
+      }
+      
+      .form-container {
+        padding: 30px;
+        margin: 40px auto;
+      }
+    }
+    
+    button {
+      cursor: pointer;
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s;
+      border: none;
+      width: 100%;
+      margin: 5px 0;
+    }
+    
+    .btn-action {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 14px;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .btn-action:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(74, 111, 255, 0.25);
+    }
+    
+    .remove-product-btn {
+      background-color: #ff4a6e;
+      color: white;
+    }
+    
+    .remove-product-btn:hover {
+      background-color: #e03c5e;
+    }
+    
+    .add-product-btn {
+      background-color: #34c759;
+      color: white;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    
+    .add-product-btn:hover {
+      background-color: #2db950;
+    }
+    
+    .total-row {
+      background-color: var(--light-gray);
+      padding: 15px;
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+    
+    @media (min-width: 640px) {
+      .total-row {
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 16px;
+      }
+      
+      button {
+        width: auto;
+      }
+    }
+    
+    .total-row label {
+      margin-bottom: 5px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    @media (min-width: 640px) {
+      .total-row label {
+        margin-bottom: 0;
+      }
+    }
+    
+    .total-row input {
+      width: 100%;
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--primary-color);
+      text-align: right;
+      background-color: white;
+    }
+    
+    @media (min-width: 640px) {
+      .total-row input {
+        width: 180px;
+      }
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: center;
+    }
+    
+    @media (min-width: 640px) {
+      .form-actions {
+        justify-content: flex-end;
+      }
+    }
+    
+    .success-message {
+      display: none;
+      background-color: var(--success-color);
+      color: white;
+      padding: 16px;
+      border-radius: var(--radius);
+      margin-top: 20px;
+      text-align: center;
+      font-weight: 500;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Estilos para tornar inputs numéricos mais amigáveis para touch */
+    input[type=number] {
+      -moz-appearance: textfield; /* Firefox */
+    }
+    
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none;
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Formulário de Orçamento - LOCAUTENSÍLIOS</h1>
+    
+    <form id="pdfForm">
+      <div class="form-header">
+        <div class="form-group">
+          <label for="nomeCliente">Nome do Cliente</label>
+          <input type="text" id="nomeCliente" name="nomeCliente" placeholder="Digite o nome completo" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="dataLocacao">Data de Locação</label>
+          <input type="date" id="dataLocacao" name="dataLocacao" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="telefone">Telefone</label>
+          <input type="tel" id="telefone" name="telefone" placeholder="(00) 00000-0000">
+        </div>
+      </div>
+      
+      <!-- Versão desktop da tabela -->
+      <div class="table-container desktop-table">
+        <table id="productTable">
+          <thead>
+            <tr>
+              <th style="width: 5%">Nº</th>
+              <th style="width: 40%">Descrição do Produto</th>
+              <th style="width: 15%">Preço Unit.</th>
+              <th style="width: 10%">Qtde</th>
+              <th style="width: 15%">Total</th>
+              <th style="width: 15%">Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="product-row">
+              <td>1</td>
+              <td>
+                <input type="text" name="descricao[]" placeholder="Nome do produto" required>
+              </td>
+              <td>
+                <input type="number" name="preco[]" step="0.01" min="0" placeholder="0,00" required oninput="calcularTotal(this)">
+              </td>
+              <td>
+                <input type="number" name="quantidade[]" min="1" value="1" required oninput="calcularTotal(this)">
+              </td>
+              <td class="produto-total">R$ 0,00</td>
+              <td>
+                <button type="button" class="remove-product-btn" onclick="removerProduto(this)">Remover</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <!-- Versão mobile em cards -->
+      <div class="mobile-cards" id="mobileProductList">
+        <div class="mobile-card" data-row-index="0">
+          <div class="mobile-card-header">
+            <div class="mobile-card-title">Produto</div>
+            <div class="mobile-card-number">1</div>
+          </div>
+          <div class="mobile-card-content">
+            <div class="mobile-card-field">
+              <span class="mobile-card-label">Descrição do Produto</span>
+              <input type="text" name="mobile-descricao[]" placeholder="Nome do produto" required oninput="sincronizarInput(this, 'descricao')">
+            </div>
+            <div class="mobile-card-field">
+              <span class="mobile-card-label">Preço Unitário (R$)</span>
+              <input type="number" name="mobile-preco[]" step="0.01" min="0" placeholder="0,00" required oninput="sincronizarInput(this, 'preco'); calcularTotalMobile(this)">
+            </div>
+            <div class="mobile-card-field">
+              <span class="mobile-card-label">Quantidade</span>
+              <input type="number" name="mobile-quantidade[]" min="1" value="1" required oninput="sincronizarInput(this, 'quantidade'); calcularTotalMobile(this)">
+            </div>
+          </div>
+          <div class="mobile-card-footer">
+            <div>
+              <span class="mobile-card-label">Total</span>
+              <div class="produto-total-mobile" style="font-weight: 600; font-size: 16px; color: var(--primary-color);">R$ 0,00</div>
+            </div>
+            <button type="button" class="remove-product-btn" onclick="removerProdutoMobile(this)">Remover</button>
+          </div>
+        </div>
+      </div>
+      
+      <button type="button" class="add-product-btn" onclick="adicionarProduto()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Adicionar Produto
+      </button>
+      
+      <div class="total-row">
+        <label for="totalGeral">Total Geral:</label>
+        <input type="text" id="totalGeral" name="totalGeral" readonly value="R$ 0,00">
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" id="gerarPdf" class="btn-action">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+            <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"></path>
+            <path d="M9 15h6"></path>
+            <path d="M9 18h6"></path>
+          </svg>
+          Gerar Orçamento PDF
+        </button>
+      </div>
+    </form>
+    
+    <div id="successMessage" class="success-message">
+      PDF gerado com sucesso! O download começará automaticamente.
+    </div>
+  </div>
+
+  <script>
+    // Sincronizar inputs entre desktop e mobile
+    function sincronizarInput(input, tipo) {
+      const card = input.closest('.mobile-card');
+      const index = card.getAttribute('data-row-index');
+      const desktopInput = document.querySelector(`input[name="${tipo}[]"]:nth-of-type(${parseInt(index) + 1})`);
+      
+      if (desktopInput) {
+        desktopInput.value = input.value;
+      }
+    }
+    
+    // Função para calcular total de cada linha na tabela desktop
+    function calcularTotal(input) {
+      const row = input.closest('tr');
+      const preco = parseFloat(row.querySelector('input[name="preco[]"]').value) || 0;
+      const quantidade = parseInt(row.querySelector('input[name="quantidade[]"]').value) || 0;
+      const total = preco * quantidade;
+      
+      row.querySelector('.produto-total').textContent = `R$ ${total.toFixed(2)}`;
+      
+      // Sincronizar com mobile
+      const index = Array.from(row.parentNode.children).indexOf(row);
+      const mobileCard = document.querySelector(`.mobile-card[data-row-index="${index}"]`);
+      if (mobileCard) {
+        const mobilePrecoInput = mobileCard.querySelector('input[name="mobile-preco[]"]');
+        const mobileQtdInput = mobileCard.querySelector('input[name="mobile-quantidade[]"]');
+        
+        if (input.name === "preco[]" && mobilePrecoInput) {
+          mobilePrecoInput.value = input.value;
+        } else if (input.name === "quantidade[]" && mobileQtdInput) {
+          mobileQtdInput.value = input.value;
+        }
+        
+        mobileCard.querySelector('.produto-total-mobile').textContent = `R$ ${total.toFixed(2)}`;
+      }
+      
+      atualizarTotalGeral();
+    }
+    
+    // Função para calcular total de cada card na versão mobile
+    function calcularTotalMobile(input) {
+      const card = input.closest('.mobile-card');
+      const preco = parseFloat(card.querySelector('input[name="mobile-preco[]"]').value) || 0;
+      const quantidade = parseInt(card.querySelector('input[name="mobile-quantidade[]"]').value) || 0;
+      const total = preco * quantidade;
+      
+      card.querySelector('.produto-total-mobile').textContent = `R$ ${total.toFixed(2)}`;
+      
+      // Sincronizar com desktop
+      const rowIndex = card.getAttribute('data-row-index');
+      const desktopRows = document.querySelectorAll('#productTable tbody tr');
+      if (desktopRows[rowIndex]) {
+        const row = desktopRows[rowIndex];
+        const precoInput = row.querySelector('input[name="preco[]"]');
+        const qtdInput = row.querySelector('input[name="quantidade[]"]');
+        
+        if (input.name === "mobile-preco[]" && precoInput) {
+          precoInput.value = input.value;
+        } else if (input.name === "mobile-quantidade[]" && qtdInput) {
+          qtdInput.value = input.value;
+        }
+        
+        row.querySelector('.produto-total').textContent = `R$ ${total.toFixed(2)}`;
+      }
+      
+      atualizarTotalGeral();
+    }
+    
+    // Função para atualizar o total geral
+    function atualizarTotalGeral() {
+      // Para desktop
+      const totais = document.querySelectorAll('.produto-total');
+      let totalGeral = 0;
+      
+      totais.forEach(campo => {
+        const valor = parseFloat(campo.textContent.replace('R$ ', '')) || 0;
+        totalGeral += valor;
+      });
+      
+      document.getElementById('totalGeral').value = `R$ ${totalGeral.toFixed(2)}`;
+    }
+    
+    // Função para adicionar novo produto
+    function adicionarProduto() {
+      // Adicionar na tabela desktop
+      const tbody = document.querySelector('#productTable tbody');
+      const numRows = tbody.querySelectorAll('tr').length;
+      
+      const newRow = document.createElement('tr');
+      newRow.className = 'product-row';
+      
+      newRow.innerHTML = `
+        <td>${numRows + 1}</td>
+        <td>
+          <input type="text" name="descricao[]" placeholder="Nome do produto" required>
+        </td>
+        <td>
+          <input type="number" name="preco[]" step="0.01" min="0" placeholder="0,00" required oninput="calcularTotal(this)">
+        </td>
+        <td>
+          <input type="number" name="quantidade[]" min="1" value="1" required oninput="calcularTotal(this)">
+        </td>
+        <td class="produto-total">R$ 0,00</td>
+        <td>
+          <button type="button" class="remove-product-btn" onclick="removerProduto(this)">Remover</button>
+        </td>
+      `;
+      
+      tbody.appendChild(newRow);
+      
+      // Adicionar card na versão mobile
+      const mobileContainer = document.getElementById('mobileProductList');
+      const newCard = document.createElement('div');
+      newCard.className = 'mobile-card';
+      newCard.setAttribute('data-row-index', numRows);
+      
+      newCard.innerHTML = `
+        <div class="mobile-card-header">
+          <div class="mobile-card-title">Produto</div>
+          <div class="mobile-card-number">${numRows + 1}</div>
+        </div>
+        <div class="mobile-card-content">
+          <div class="mobile-card-field">
+            <span class="mobile-card-label">Descrição do Produto</span>
+            <input type="text" name="mobile-descricao[]" placeholder="Nome do produto" required oninput="sincronizarInput(this, 'descricao')">
+          </div>
+          <div class="mobile-card-field">
+            <span class="mobile-card-label">Preço Unitário (R$)</span>
+            <input type="number" name="mobile-preco[]" step="0.01" min="0" placeholder="0,00" required oninput="sincronizarInput(this, 'preco'); calcularTotalMobile(this)">
+          </div>
+          <div class="mobile-card-field">
+            <span class="mobile-card-label">Quantidade</span>
+            <input type="number" name="mobile-quantidade[]" min="1" value="1" required oninput="sincronizarInput(this, 'quantidade'); calcularTotalMobile(this)">
+          </div>
+        </div>
+        <div class="mobile-card-footer">
+          <div>
+            <span class="mobile-card-label">Total</span>
+            <div class="produto-total-mobile" style="font-weight: 600; font-size: 16px; color: var(--primary-color);">R$ 0,00</div>
+          </div>
+          <button type="button" class="remove-product-btn" onclick="removerProdutoMobile(this)">Remover</button>
+        </div>
+      `;
+      
+      mobileContainer.appendChild(newCard);
+    }
+    
+    // Função para remover produto da tabela desktop
+    function removerProduto(button) {
+      const tbody = document.querySelector('#productTable tbody');
+      if (tbody.querySelectorAll('tr').length <= 1) {
+        alert('É necessário ter pelo menos um produto!');
+        return;
+      }
+      
+      const row = button.closest('tr');
+      const index = Array.from(tbody.children).indexOf(row);
+      
+      // Remover também o card correspondente
+      const mobileCard = document.querySelector(`.mobile-card[data-row-index="${index}"]`);
+      if (mobileCard) {
+        mobileCard.remove();
+      }
+      
+      row.remove();
+      
+      // Renumerar as linhas na tabela e cards
+      renumerarLinhas();
+      
+      atualizarTotalGeral();
+    }
+    
+    // Função para remover produto da versão mobile
+    function removerProdutoMobile(button) {
+      const mobileContainer = document.getElementById('mobileProductList');
+      if (mobileContainer.querySelectorAll('.mobile-card').length <= 1) {
+        alert('É necessário ter pelo menos um produto!');
+        return;
+      }
+      
+      const card = button.closest('.mobile-card');
+      const index = card.getAttribute('data-row-index');
+      
+      // Remover também a linha correspondente na tabela
+      const desktopRows = document.querySelectorAll('#productTable tbody tr');
+      if (desktopRows[index]) {
+        desktopRows[index].remove();
+      }
+      
+      card.remove();
+      
+      // Renumerar as linhas na tabela e cards
+      renumerarLinhas();
+      
+      atualizarTotalGeral();
+    }
+    
+    // Função para renumerar linhas e cards após remoção
+    function renumerarLinhas() {
+      // Renumerar linhas desktop
+      const rows = document.querySelectorAll('#productTable tbody tr');
+      rows.forEach((row, index) => {
+        row.querySelector('td:first-child').textContent = index + 1;
+      });
+      
+      // Renumerar cards mobile
+      const cards = document.querySelectorAll('.mobile-card');
+      cards.forEach((card, index) => {
+        card.setAttribute('data-row-index', index);
+        card.querySelector('.mobile-card-number').textContent = index + 1;
+      });
+    }
+    
+    // Gerar PDF (simulação)
+    document.getElementById('gerarPdf').addEventListener('click', function() {
+      const nomeCliente = document.getElementById('nomeCliente').value;
+      const dataLocacao = document.getElementById('dataLocacao').value;
+      
+      if (!nomeCliente || !dataLocacao) {
+        alert('Por favor, preencha todos os campos obrigatórios!');
+        return;
+      }
+      
+      // Verificar se todos os produtos têm descrição
+      const descricoes = document.querySelectorAll('input[name="descricao[]"]');
+      let valido = true;
+      
+      descricoes.forEach(input => {
+        if (!input.value.trim()) {
+          valido = false;
+        }
+      });
+      
+      if (!valido) {
+        alert('Por favor, preencha a descrição de todos os produtos!');
+        return;
+      }
+      
+      // Aqui seria implementada a geração real do PDF
+
+      gerarPDF();
+      document.getElementById('successMessage').style.display = 'block';
+      
+      // Esconder mensagem após 5 segundos
+      setTimeout(() => {
+        document.getElementById('successMessage').style.display = 'none';
+      }, 5000);
+    });
+
+     // Função para gerar o PDF
+     function gerarPDF() {
+            const { jsPDF } = window.jspdf;
+            
+            // Validação do formulário
+            const nomeCliente = document.getElementById('nomeCliente').value;
+            const dataLocacao = document.getElementById('dataLocacao').value;
+            
+            if (!nomeCliente || !dataLocacao) {
+                alert('Por favor, preencha o nome do cliente e a data de locação.');
+                return;
+            }
+            
+            // Verificar se há produtos no formulário
+            const linhas = document.getElementById('productTable').getElementsByTagName('tbody')[0].rows;
+            if (linhas.length === 0) {
+                alert('Adicione pelo menos um produto ao orçamento.');
+                return;
+            }
+            
+            // Criar o PDF
+            const doc = new jsPDF();
+            
+            // Configurações iniciais
+            doc.setFontSize(22);
+            doc.text('Orçamento', 105, 30, { align: 'center' });
+            
+            // Data atual para o PDF (formato Abril, 2025)
+            const data = new Date();
+            const mes = data.toLocaleString('pt-BR', { month: 'long' });
+            const ano = data.getFullYear();
+            doc.setFontSize(14);
+            doc.text(`${mes.charAt(0).toUpperCase() + mes.slice(1)}, ${ano}`, 190, 30, { align: 'right' });
+            
+            // Adicionar informações do cliente
+            doc.setFontSize(12);
+            doc.text('Nome cliente:', 20, 50);
+            doc.text(nomeCliente, 75, 50);
+            
+            // Formatar data de locação para exibição (dd/mm/aaaa)
+            const dataObj = new Date(dataLocacao);
+            const diaFormatado = dataObj.getDate().toString().padStart(2, '0');
+            const mesFormatado = (dataObj.getMonth() + 1).toString().padStart(2, '0');
+            const anoFormatado = dataObj.getFullYear();
+            const dataFormatada = `${diaFormatado}/${mesFormatado}/${anoFormatado}`;
+            
+            doc.text('Data de locação:', 20, 60);
+            doc.text(dataFormatada, 75, 60);
+            
+            // Preparar dados para a tabela
+            const dados = [];
+            let totalGeral = 0;
+            
+            for (let i = 0; i < linhas.length; i++) {
+                const descricao = linhas[i].querySelector('input[name="descricao[]"]').value;
+                const preco = parseFloat(linhas[i].querySelector('input[name="preco[]"]').value) || 0;
+                const quantidade = parseInt(linhas[i].querySelector('input[name="quantidade[]"]').value) || 0;
+                const total = preco * quantidade;
+                
+                dados.push([
+                    i + 1,
+                    descricao,
+                    'R$' + preco.toFixed(2).replace('.', ','),
+                    quantidade,
+                    'R$ ' + total.toFixed(2).replace('.', ',')
+                ]);
+                
+                totalGeral += total;
+            }
+            
+            // Criar tabela no PDF
+            doc.autoTable({
+                startY: 70,
+                head: [['Nº', 'Descrição do Produto', 'Preço', 'Qt', 'Total']],
+                body: dados,
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [0, 0, 0],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                columnStyles: {
+                    0: { cellWidth: 15 },
+                    1: { cellWidth: 'auto' },
+                    2: { cellWidth: 30, halign: 'right' },
+                    3: { cellWidth: 20, halign: 'center' },
+                    4: { cellWidth: 30, halign: 'right' }
+                }
+            });
+            
+            // Adicionar total geral
+            const finalY = doc.previousAutoTable.finalY;
+            doc.setFillColor(255, 255, 0);
+            doc.rect(155, finalY + 5, 35, 10, 'F');
+            //doc.setFontStyle('bold');
+            doc.text('Total:', 145, finalY + 10, { align: 'right' });
+            doc.text('R$ ' + totalGeral.toFixed(2).replace('.', ','), 185, finalY + 10, { align: 'right' });
+            
+            // Adicionar rodapé com contato
+            //doc.setFontStyle('normal');
+            doc.setFontSize(10);
+            doc.text('@LOCAUTENSILIOS', 105, 280, { align: 'center' });
+            doc.text('WhatsApp: (71)99985-1506', 105, 285, { align: 'center' });
+            
+            // Salvar o PDF
+            doc.save('Orcamento_Locautensilios.pdf');
+            
+            // Mostrar mensagem de sucesso
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Esconder a mensagem após 3 segundos
+            setTimeout(function() {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 3000);
+        }
+    </script>
+  </script>
+</body>
+</html>
