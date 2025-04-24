@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orçamento - Locautensílios</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #000;
+        }
+        .form-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="text"], 
+        input[type="email"],
+        input[type="tel"],
+        input[type="date"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        thead {
+            background-color: #000;
+            color: white;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        .product-row {
+            background-color: #f9f9f9;
+        }
+        .total-row {
+            font-weight: bold;
+        }
+        .add-product-btn, .remove-product-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            margin: 5px 0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .remove-product-btn {
+            background-color: #f44336;
+        }
+        button {
+            background-color: #000;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            display: block;
+            margin: 20px auto 0;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #333;
+        }
+        .success-message {
+            display: none;
+            text-align: center;
+            color: #4CAF50;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Formulário de Orçamento - LOCAUTENSÍLIOS</h1>
+        
+        <form id="pdfForm">
+            <div class="form-group">
+                <label for="nomeCliente">Nome do Cliente:</label>
+                <input type="text" id="nomeCliente" name="nomeCliente" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="dataLocacao">Data de Locação:</label>
+                <input type="date" id="dataLocacao" name="dataLocacao" required>
+            </div>
+            
+            <table id="productTable">
+                <thead>
+                    <tr>
+                        <th>Nº</th>
+                        <th>Descrição do Produto</th>
+                        <th>Preço</th>
+                        <th>Qt</th>
+                        <th>Total</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="product-row">
+                        <td>1</td>
+                        <td>
+                            <input type="text" name="descricao[]" required>
+                        </td>
+                        <td>
+                            <input type="number" name="preco[]" step="0.01" min="0" required oninput="calcularTotal(this)">
+                        </td>
+                        <td>
+                            <input type="number" name="quantidade[]" min="1" value="1" required oninput="calcularTotal(this)">
+                        </td>
+                        <td class="produto-total">R$ 0,00</td>
+                        <td>
+                            <button type="button" class="remove-product-btn" onclick="removerProduto(this)">Remover</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <button type="button" class="add-product-btn" onclick="adicionarProduto()">Adicionar Produto</button>
+            
+            <div class="form-group total-row">
+                <label for="totalGeral">Total Geral:</label>
+                <input type="text" id="totalGeral" name="totalGeral" readonly value="R$ 0,00">
+            </div>
+            
+            <button type="button" id="gerarPdf">Gerar Orçamento PDF</button>
+        </form>
+        
+        <div id="successMessage" class="success-message">
+            PDF gerado com sucesso! O download começará automaticamente.
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const { jsPDF } = window.jspdf;
+            
+            // Adicionar evento ao botão de gerar PDF
+            document.getElementById('gerarPdf').addEventListener('click', function() {
+                gerarPDF();
+            });
+        });
+        
+        // Função para adicionar nova linha de produto
+        function adicionarProduto() {
+            const tabela = document.getElementById('productTable').getElementsByTagName('tbody')[0];
+            const novaLinha = document.createElement('tr');
+            novaLinha.className = 'product-row';
+            const numeroLinhas = tabela.rows.length;
+            
+            novaLinha.innerHTML = `
+                <td>${numeroLinhas + 1}</td>
+                <td>
+                    <input type="text" name="descricao[]" required>
+                </td>
+                <td>
+                    <input type="number" name="preco[]" step="0.01" min="0" required oninput="calcularTotal(this)">
+                </td>
+                <td>
+                    <input type="number" name="quantidade[]" min="1" value="1" required oninput="calcularTotal(this)">
+                </td>
+                <td class="produto-total">R$ 0,00</td>
+                <td>
+                    <button type="button" class="remove-product-btn" onclick="removerProduto(this)">Remover</button>
+                </td>
+            `;
+            
+            tabela.appendChild(novaLinha);
+            atualizarNumeros();
+        }
+        
+        // Função para remover linha de produto
+        function removerProduto(botao) {
+            const linha = botao.parentNode.parentNode;
+            linha.parentNode.removeChild(linha);
+            atualizarNumeros();
+            calcularTotalGeral();
+        }
+        
+        // Função para atualizar números das linhas
+        function atualizarNumeros() {
+            const tabela = document.getElementById('productTable').getElementsByTagName('tbody')[0];
+            const linhas = tabela.rows;
+            
+            for (let i = 0; i < linhas.length; i++) {
+                linhas[i].cells[0].textContent = i + 1;
+            }
+        }
+        
+        // Função para calcular total de cada produto
+        function calcularTotal(input) {
+            const linha = input.parentNode.parentNode;
+            const preco = parseFloat(linha.querySelector('input[name="preco[]"]').value) || 0;
+            const quantidade = parseInt(linha.querySelector('input[name="quantidade[]"]').value) || 0;
+            const total = preco * quantidade;
+            
+            linha.querySelector('.produto-total').textContent = 'R$ ' + total.toFixed(2).replace('.', ',');
+            
+            calcularTotalGeral();
+        }
+        
+        // Função para calcular o total geral
+        function calcularTotalGeral() {
+            const totais = document.querySelectorAll('.produto-total');
+            let soma = 0;
+            
+            totais.forEach(function(totalElement) {
+                const valor = parseFloat(totalElement.textContent.replace('R$ ', '').replace(',', '.')) || 0;
+                soma += valor;
+            });
+            
+            document.getElementById('totalGeral').value = 'R$ ' + soma.toFixed(2).replace('.', ',');
+        }
+        
+        // Função para gerar o PDF
+        function gerarPDF() {
+            const { jsPDF } = window.jspdf;
+            
+            // Validação do formulário
+            const nomeCliente = document.getElementById('nomeCliente').value;
+            const dataLocacao = document.getElementById('dataLocacao').value;
+            
+            if (!nomeCliente || !dataLocacao) {
+                alert('Por favor, preencha o nome do cliente e a data de locação.');
+                return;
+            }
+            
+            // Verificar se há produtos no formulário
+            const linhas = document.getElementById('productTable').getElementsByTagName('tbody')[0].rows;
+            if (linhas.length === 0) {
+                alert('Adicione pelo menos um produto ao orçamento.');
+                return;
+            }
+            
+            // Criar o PDF
+            const doc = new jsPDF();
+            
+            // Configurações iniciais
+            doc.setFontSize(22);
+            doc.text('Orçamento', 105, 30, { align: 'center' });
+            
+            // Data atual para o PDF (formato Abril, 2025)
+            const data = new Date();
+            const mes = data.toLocaleString('pt-BR', { month: 'long' });
+            const ano = data.getFullYear();
+            doc.setFontSize(14);
+            doc.text(`${mes.charAt(0).toUpperCase() + mes.slice(1)}, ${ano}`, 190, 30, { align: 'right' });
+            
+            // Adicionar informações do cliente
+            doc.setFontSize(12);
+            doc.text('Nome cliente:', 20, 50);
+            doc.text(nomeCliente, 75, 50);
+            
+            // Formatar data de locação para exibição (dd/mm/aaaa)
+            const dataObj = new Date(dataLocacao);
+            const diaFormatado = dataObj.getDate().toString().padStart(2, '0');
+            const mesFormatado = (dataObj.getMonth() + 1).toString().padStart(2, '0');
+            const anoFormatado = dataObj.getFullYear();
+            const dataFormatada = `${diaFormatado}/${mesFormatado}/${anoFormatado}`;
+            
+            doc.text('Data de locação:', 20, 60);
+            doc.text(dataFormatada, 75, 60);
+            
+            // Preparar dados para a tabela
+            const dados = [];
+            let totalGeral = 0;
+            
+            for (let i = 0; i < linhas.length; i++) {
+                const descricao = linhas[i].querySelector('input[name="descricao[]"]').value;
+                const preco = parseFloat(linhas[i].querySelector('input[name="preco[]"]').value) || 0;
+                const quantidade = parseInt(linhas[i].querySelector('input[name="quantidade[]"]').value) || 0;
+                const total = preco * quantidade;
+                
+                dados.push([
+                    i + 1,
+                    descricao,
+                    'R$' + preco.toFixed(2).replace('.', ','),
+                    quantidade,
+                    'R$ ' + total.toFixed(2).replace('.', ',')
+                ]);
+                
+                totalGeral += total;
+            }
+            
+            // Criar tabela no PDF
+            doc.autoTable({
+                startY: 70,
+                head: [['Nº', 'Descrição do Produto', 'Preço', 'Qt', 'Total']],
+                body: dados,
+                theme: 'striped',
+                headStyles: {
+                    fillColor: [0, 0, 0],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold'
+                },
+                columnStyles: {
+                    0: { cellWidth: 15 },
+                    1: { cellWidth: 'auto' },
+                    2: { cellWidth: 30, halign: 'right' },
+                    3: { cellWidth: 20, halign: 'center' },
+                    4: { cellWidth: 30, halign: 'right' }
+                }
+            });
+            
+            // Adicionar total geral
+            const finalY = doc.previousAutoTable.finalY;
+            doc.setFillColor(255, 255, 0);
+            doc.rect(155, finalY + 5, 35, 10, 'F');
+            //doc.setFontStyle('bold');
+            doc.text('Total:', 145, finalY + 10, { align: 'right' });
+            doc.text('R$ ' + totalGeral.toFixed(2).replace('.', ','), 185, finalY + 10, { align: 'right' });
+            
+            // Adicionar rodapé com contato
+            //doc.setFontStyle('normal');
+            doc.setFontSize(10);
+            doc.text('@LOCAUTENSILIOS', 105, 280, { align: 'center' });
+            doc.text('WhatsApp: (71)99985-1506', 105, 285, { align: 'center' });
+            
+            // Salvar o PDF
+            doc.save('Orcamento_Locautensilios.pdf');
+            
+            // Mostrar mensagem de sucesso
+            document.getElementById('successMessage').style.display = 'block';
+            
+            // Esconder a mensagem após 3 segundos
+            setTimeout(function() {
+                document.getElementById('successMessage').style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
