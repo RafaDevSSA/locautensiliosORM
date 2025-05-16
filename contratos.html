@@ -269,7 +269,7 @@
                     <div class="col">
                         <div class="form-group">
                             <label for="locatario-cpf">CPF:</label>
-                            <input type="text" id="locatario-cpf" name="locatario-cpf" required >
+                            <input type="text" id="locatario-cpf" name="locatario-cpf" required>
                         </div>
                     </div>
                 </div>
@@ -278,13 +278,13 @@
                     <div class="col">
                         <div class="form-group">
                             <label for="locatario-rg">RG:</label>
-                            <input type="text" id="locatario-rg" name="locatario-rg" required >
+                            <input type="text" id="locatario-rg" name="locatario-rg" required>
                         </div>
                     </div>
                     <div class="col">
                         <div class="form-group">
                             <label for="locatario-endereco">Endereço Completo:</label>
-                            <input type="text" id="locatario-endereco" name="locatario-endereco" required >
+                            <input type="text" id="locatario-endereco" name="locatario-endereco" required>
                         </div>
                     </div>
                 </div>
@@ -316,7 +316,7 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
                     <div class="col">
                         <div class="form-group">
                             <label for="duracao-dias">Duração (dias):</label>
-                            <input type="number" id="duracao-dias" name="duracao-dias" min="1" required >
+                            <input type="number" id="duracao-dias" name="duracao-dias" min="1" required>
                         </div>
                     </div>
                 </div>
@@ -360,7 +360,7 @@ R$18,00 unidade prato raso 26cm a serem pagas no momento da devolução.
                     <div class="col">
                         <div class="form-group">
                             <label for="data-contrato">Data do Contrato:</label>
-                            <input type="date" id="data-contrato" name="data-contrato" required >
+                            <input type="date" id="data-contrato" name="data-contrato" required>
                         </div>
                     </div>
                 </div>
@@ -398,6 +398,9 @@ R$18,00 unidade prato raso 26cm a serem pagas no momento da devolução.
     </div>
 
     <script>
+
+       
+
         // Funções auxiliares
         function formatarValor(valor) {
             return parseFloat(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -474,9 +477,17 @@ R$18,00 unidade prato raso 26cm a serem pagas no momento da devolução.
             const valorAluguel = document.getElementById('valor-aluguel').value;
             const taxaDano = document.getElementById('taxa-dano').value;
             const multaAtraso = document.getElementById('multa-atraso').value;
-            const dataContrato = document.getElementById('data-contrato').value;
             const cidadeContrato = document.getElementById('cidade-contrato').value;
             const estadoContrato = document.getElementById('estado-contrato').value;
+
+            const dataContratoInput = document.getElementById('data-contrato');
+            const dataAtual = new Date();
+            dataAtual.setDate(dataAtual.getDate()+1);
+
+            dataContratoInput.valueAsDate = dataAtual;
+
+            
+            const dataContrato = document.getElementById('data-contrato').value;
 
             // Calcular a data de fim
             const dataFim = calcularDataFim(dataInicio, duracaoDias);
@@ -507,7 +518,7 @@ R$18,00 unidade prato raso 26cm a serem pagas no momento da devolução.
                 
                 <p>Por estarem assim justos e contratados, firmam o presente instrumento em duas vias de igual teor.</p>
                 
-                <p>${cidadeContrato} -- ${estadoContrato}, ${formatarData(dataContrato)}.</p>
+                <p>${cidadeContrato} - ${estadoContrato}, ${formatarData(dataContrato)}.</p>
                 
                 <div class="signatures">
                     <div class="signature-line">
