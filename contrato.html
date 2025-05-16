@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulário de Contrato de Locação</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+            --text-color: #333;
+            --light-gray: #f2f2f2;
+            --border-color: #ddd;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: var(--text-color);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .form-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -10px;
+        }
+
+        .col {
+            flex: 1;
+            padding: 0 10px;
+            min-width: 200px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn-secondary {
+            background-color: #808080;
+        }
+
+        .btn-secondary:hover {
+            background-color: #6c6c6c;
+        }
+
+        #preview-container {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: white;
+        }
+
+        #contract-preview {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.5;
+            text-align: justify;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .contract-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .signatures {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-line {
+            width: 45%;
+            text-align: center;
+        }
+
+        .line {
+            border-bottom: 1px solid #000;
+            margin-bottom: 5px;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+                width: auto;
+            }
+
+            .col {
+                flex: 100%;
+                margin-bottom: 10px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            button {
+                margin-bottom: 10px;
+                width: 100%;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Contrato de Locação de Utensílios</h1>
+            <p>Preencha os dados abaixo para gerar o contrato automaticamente</p>
+        </div>
+
+        <form id="rental-form">
+            <div class="form-section">
+                <div class="form-title">Dados do Locador</div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="locador-nome">Nome Completo:</label>
+                            <input type="text" id="locador-nome" name="locador-nome" required
+                                value="Raiana Araújo Valério">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="locador-nacionalidade">Nacionalidade:</label>
+                            <input type="text" id="locador-nacionalidade" name="locador-nacionalidade" required
+                                value="brasileira">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="locador-estado-civil">Estado Civil:</label>
+                            <select id="locador-estado-civil" name="locador-estado-civil" required>
+                                <option value="solteiro(a)">Solteiro(a)</option>
+                                <option value="casado(a)" selected>Casado(a)</option>
+                                <option value="divorciado(a)">Divorciado(a)</option>
+                                <option value="viúvo(a)">Viúvo(a)</option>
+                                <option value="união estável">União Estável</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="locador-cpf">CPF:</label>
+                            <input type="text" id="locador-cpf" name="locador-cpf" required value="03483264590">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="locador-rg">RG:</label>
+                            <input type="text" id="locador-rg" name="locador-rg" required value="1396890874">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="locador-endereco">Endereço Completo:</label>
+                            <input type="text" id="locador-endereco" name="locador-endereco" required
+                                value="Rua Colônia Boa união -- Catu de Abrantes">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-title">Dados do Locatário</div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="locatario-nome">Nome Completo:</label>
+                            <input type="text" id="locatario-nome" name="locatario-nome" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="locatario-cpf">CPF:</label>
+                            <input type="text" id="locatario-cpf" name="locatario-cpf" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="locatario-rg">RG:</label>
+                            <input type="text" id="locatario-rg" name="locatario-rg" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="locatario-endereco">Endereço Completo:</label>
+                            <input type="text" id="locatario-endereco" name="locatario-endereco" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-title">Detalhes da Locação</div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="desc-itens">Descrição dos itens alugados:</label>
+                            <textarea id="desc-itens" name="desc-itens" required rows="10">
+                                O presente contrato tem como objetos 100 pratos de porcelana 26cm (100)
+com talheres, todas em bom estado de conservação e limpeza, de propriedade do(a)
+LOCADOR, que serão locadas ao LOCATÁRIO.
+
+                            </textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="data-inicio">Data de Início:</label>
+                            <input type="date" id="data-inicio" name="data-inicio" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="duracao-dias">Duração (dias):</label>
+                            <input type="number" id="duracao-dias" name="duracao-dias" min="1" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="local-retirada">Local de Retirada:</label>
+                            <input type="text" id="local-retirada" name="local-retirada" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="valor-aluguel">Valor do Aluguel (R$):</label>
+                            <input type="number" id="valor-aluguel" name="valor-aluguel" step="0.01" min="0" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="taxa-dano">Taxa por Dano:</label>
+                            <textarea id="taxa-dano" name="taxa-dano" required rows="10">
+                                Em caso de danos, seguirá as seguintes taxas: R$3,00 unidade do talher e
+R$18,00 unidade prato raso 26cm a serem pagas no momento da devolução.
+
+                            </textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="multa-atraso">Multa por Atraso (R$/dia):</label>
+                            <input type="number" id="multa-atraso" name="multa-atraso" step="0.01" min="0" required
+                                value="50.00">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="data-contrato">Data do Contrato:</label>
+                            <input type="date" id="data-contrato" name="data-contrato" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="cidade-contrato">Cidade do Contrato:</label>
+                            <input type="text" id="cidade-contrato" name="cidade-contrato" required value="Camaçari">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="estado-contrato">Estado:</label>
+                            <input type="text" id="estado-contrato" name="estado-contrato" required value="BA">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button type="button" id="back">voltar</button>
+                <button type="button" id="preview-btn">Visualizar Contrato</button>
+                <button type="button" id="generate-pdf-btn">Gerar PDF</button>
+            </div>
+        </form>
+
+        <div id="preview-container">
+            <div class="form-title">Pré-visualização do Contrato</div>
+            <div id="contract-preview"></div>
+            <div class="buttons">
+                <button type="button" id="back-to-form-btn">Voltar ao Formulário</button>
+                <button type="button" id="preview-generate-pdf-btn">Gerar PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+       
+
+        // Funções auxiliares
+        function formatarValor(valor) {
+            return parseFloat(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatarData(data) {
+            const d = new Date(data);
+            const dia = d.getDate().toString().padStart(2, '0');
+            const mes = (d.getMonth() + 1).toString().padStart(2, '0');
+            const ano = d.getFullYear();
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        function calcularDataFim(dataInicio, duracaoDias) {
+            const inicio = new Date(dataInicio);
+            const fim = new Date(inicio);
+            fim.setDate(inicio.getDate() + parseInt(duracaoDias) - 1);
+            return fim;
+        }
+
+        function valorPorExtenso(valor) {
+            if (valor === 0) return 'zero';
+
+            const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
+            const dezADezenove = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
+            const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
+            const centenas = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
+
+            const valorStr = Math.floor(valor).toString().padStart(3, '0');
+            let extenso = '';
+
+            // Centenas
+            if (valorStr === '100') return 'cem';
+            if (parseInt(valorStr[0]) > 0) {
+                extenso += centenas[parseInt(valorStr[0])];
+                if (parseInt(valorStr.substring(1)) > 0) extenso += ' e ';
+            }
+
+            // Dezenas e unidades
+            if (parseInt(valorStr.substring(1, 3)) > 0) {
+                if (parseInt(valorStr.substring(1, 3)) < 10) {
+                    extenso += unidades[parseInt(valorStr.substring(1, 3))];
+                } else if (parseInt(valorStr.substring(1, 3)) < 20) {
+                    extenso += dezADezenove[parseInt(valorStr.substring(1, 3)) - 10];
+                } else {
+                    extenso += dezenas[parseInt(valorStr[1])];
+                    if (parseInt(valorStr[2]) > 0) {
+                        extenso += ' e ' + unidades[parseInt(valorStr[2])];
+                    }
+                }
+            }
+
+            return extenso;
+        }
+
+        function gerarTextoContrato() {
+            // Obter valores do formulário
+            const locadorNome = document.getElementById('locador-nome').value;
+            const locadorNacionalidade = document.getElementById('locador-nacionalidade').value;
+            const locadorEstadoCivil = document.getElementById('locador-estado-civil').value;
+            const locadorCPF = document.getElementById('locador-cpf').value;
+            const locadorRG = document.getElementById('locador-rg').value;
+            const locadorEndereco = document.getElementById('locador-endereco').value;
+
+            const locatarioNome = document.getElementById('locatario-nome').value;
+            const locatarioCPF = document.getElementById('locatario-cpf').value;
+            const locatarioRG = document.getElementById('locatario-rg').value;
+            const locatarioEndereco = document.getElementById('locatario-endereco').value;
+
+            const descItens = document.getElementById('desc-itens').value;
+            const dataInicio = document.getElementById('data-inicio').value;
+            const duracaoDias = document.getElementById('duracao-dias').value;
+            const localRetirada = document.getElementById('local-retirada').value;
+            const valorAluguel = document.getElementById('valor-aluguel').value;
+            const taxaDano = document.getElementById('taxa-dano').value;
+            const multaAtraso = document.getElementById('multa-atraso').value;
+            const cidadeContrato = document.getElementById('cidade-contrato').value;
+            const estadoContrato = document.getElementById('estado-contrato').value;
+
+            const dataContratoInput = document.getElementById('data-contrato');
+            const dataAtual = new Date();
+            dataAtual.setDate(dataAtual.getDate()+1);
+
+            dataContratoInput.valueAsDate = dataAtual;
+
+            
+            const dataContrato = document.getElementById('data-contrato').value;
+
+            // Calcular a data de fim
+            const dataFim = calcularDataFim(dataInicio, duracaoDias);
+
+            // Formatação dos valores numéricos por extenso
+            const valorAluguelExtenso = valorPorExtenso(valorAluguel);
+            const multaAtrasoExtenso = valorPorExtenso(multaAtraso);
+
+            // Montar o texto do contrato
+            const textoContrato = `
+                <div class="contract-title">CONTRATO DE LOCAÇÃO DE UTENSILIOS PARA EVENTOS</div>
+                
+                <p>Pelo presente instrumento, de um lado, ${locadorNome}, ${locadorNacionalidade}, ${locadorEstadoCivil}, inscrita no CPF sob o nº ${locadorCPF} e no RG nº ${locadorRG}, residente e domiciliado(a) à ${locadorEndereco}, doravante denominado(a) LOCADOR(a) e de outro lado ${locatarioNome}, inscrito(a) no CPF sob o nº ${locatarioCPF} e no RG nº ${locatarioRG}, residente e domiciliado à ${locatarioEndereco}, doravante denominado LOCATÁRIO, têm, entre si, justo e acertado o presente contrato de locação pratos de porcelana e talheres que se regerá pelas cláusulas e condições descritas a seguir.</p>
+                
+                <p><strong>Cláusula 1ª.</strong> ${descItens}</p>
+                
+                <p><strong>Cláusula 2ª.</strong> É vedado ao(à) LOCATÁRIO transferir, sublocar, ceder ou emprestar os bens ora locados a terceiros.</p>
+                
+                <p><strong>Cláusula 3ª.</strong> A locação terá duração de ${duracaoDias} (${valorPorExtenso(duracaoDias)}) dias, com início em ${formatarData(dataInicio)}, quando os bens serão retirados pelo LOCATÁRIO no endereço indicado pelo LOCADOR, qual seja, ${localRetirada}, e finalizando no dia ${formatarData(dataFim)} quando os bens serão entregues pelo LOCATÁRIO.</p>
+                
+                <p><strong>Cláusula 4ª.</strong> O valor do aluguel será de R$ ${formatarValor(valorAluguel)} (${valorAluguelExtenso} reais), 50% sendo paga no ato lavrado deste contrato e 50% restantes a ser pago pelo(a) LOCATÁRIO no momento da entrega dos bens.</p>
+                
+                <p><strong>Cláusula 5ª.</strong> Ao final da locação os bens deverão ser devolvidos pelo(a) LOCATÁRIO(a) nas mesmas condições de limpeza e conservação em que foram recebidos, sob pena de responder por perdas e danos além dos custos de limpeza.</p>
+                
+                <p><strong>Cláusula 6ª.</strong>${taxaDano}</p>
+                
+                <p><strong>Cláusula 7ª.</strong> Caso o prazo para devolução dos bens, especificado na cláusula terceira, não seja respeitado pelo(a) LOCATÁRIO, que deixar de disponibilizar os bens para retirada, este(a) incorrerá em multa de R$ ${formatarValor(multaAtraso)} (${multaAtrasoExtenso} reais) por dia de atraso.</p>
+                
+                <p>Por estarem assim justos e contratados, firmam o presente instrumento em duas vias de igual teor.</p>
+                
+                <p>${cidadeContrato} - ${estadoContrato}, ${formatarData(dataContrato)}.</p>
+                
+                <div class="signatures">
+                    <div class="signature-line">
+                        <div class="line"></div>
+                        <div>Assinatura do locador</div>
+                    </div>
+                    
+                    <div class="signature-line">
+                        <div class="line"></div>
+                        <div>Assinatura do locatário</div>
+                    </div>
+                </div>
+            `;
+
+            return textoContrato;
+        }
+
+        // Event listeners
+        document.getElementById('back').addEventListener('click', function () {
+             window.location.href = 'index.html'; // Ajuste 
+        });
+        // Event listeners
+        document.getElementById('preview-btn').addEventListener('click', function () {
+            document.getElementById('rental-form').style.display = 'none';
+            document.getElementById('preview-container').style.display = 'block';
+            document.getElementById('contract-preview').innerHTML = gerarTextoContrato();
+        });
+
+        document.getElementById('back-to-form-btn').addEventListener('click', function () {
+            document.getElementById('rental-form').style.display = 'block';
+            document.getElementById('preview-container').style.display = 'none';
+        });
+
+        document.getElementById('generate-pdf-btn').addEventListener('click', function () {
+            generatePDF();
+        });
+
+        document.getElementById('preview-generate-pdf-btn').addEventListener('click', function () {
+            generatePDF();
+        });
+
+        function generatePDF() {
+            // Usar jsPDF para gerar o PDF
+            const { jsPDF } = window.jspdf;
+
+            // Preparar o conteúdo para impressão
+            const printElement = document.createElement('div');
+            printElement.style.width = '210mm';
+            printElement.style.padding = '20mm';
+            printElement.style.backgroundColor = 'white';
+            printElement.style.position = 'absolute';
+            printElement.style.left = '-9999px';
+            printElement.innerHTML = gerarTextoContrato();
+            document.body.appendChild(printElement);
+
+            // Capturar o conteúdo como imagem
+            html2canvas(printElement, {
+                scale: 2,
+                useCORS: true,
+                logging: false
+            }).then(canvas => {
+                // Remover o elemento temporário
+                document.body.removeChild(printElement);
+
+                const imgData = canvas.toDataURL('image/jpeg', 1.0);
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = pageWidth;
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                // Adicionar primeira página
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                // Adicionar páginas adicionais se necessário
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                // Obter os dados do locador e locatário para o nome do arquivo
+                const locadorNome = document.getElementById('locador-nome').value.split(' ')[0];
+                const locatarioNome = document.getElementById('locatario-nome').value.split(' ')[0];
+                const dataHoje = new Date().toISOString().slice(0, 10);
+
+                // Salvar o PDF
+                pdf.save(`CONTRATO_${locadorNome}_${locatarioNome}_${dataHoje}.pdf`);
+            });
+        }
+    </script>
+</body>
+
+</html>
