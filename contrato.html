@@ -341,9 +341,7 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
                         <div class="form-group">
                             <label for="taxa-dano">Taxa por Dano:</label>
                             <textarea id="taxa-dano" name="taxa-dano" required rows="10">
-                                Em caso de danos, seguirá as seguintes taxas: R$3,00 unidade do talher e
-R$18,00 unidade prato raso 26cm a serem pagas no momento da devolução.
-
+                               Em caso de danos, seguirá as seguintes taxas: R$3,00 unidade do talher, R$5,00 unidade da taça, R$10,00 unidade prato sobremesa e R$18,00 unidade prato raso 29cm a serem pagas no momento da devolução.
                             </textarea>
                         </div>
                     </div>
@@ -572,6 +570,7 @@ R$18,00 unidade prato raso 26cm a serem pagas no momento da devolução.
             printElement.style.backgroundColor = 'white';
             printElement.style.position = 'absolute';
             printElement.style.left = '-9999px';
+            printElement.align = 'justify';
             printElement.innerHTML = gerarTextoContrato();
             document.body.appendChild(printElement);
 
@@ -612,7 +611,7 @@ R$18,00 unidade prato raso 26cm a serem pagas no momento da devolução.
                 const dataHoje = new Date().toISOString().slice(0, 10);
 
                 // Salvar o PDF
-                pdf.save(`CONTRATO_${locadorNome}_${locatarioNome}_${dataHoje}.pdf`);
+                pdf.save(`CONTRATO_${locatarioNome}_${dataHoje}.pdf`);
             });
         }
     </script>
