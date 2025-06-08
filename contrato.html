@@ -7,6 +7,10 @@
     <title>Formulário de Contrato de Locação</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="./contratosFirebase.js"></script>
     <style>
         :root {
             --primary-color: #4CAF50;
@@ -381,6 +385,7 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
 
             <div class="buttons">
                 <button type="button" id="back">voltar</button>
+                <button type="button" id="verContratos">Ver contratos</button>
                 <button type="button" id="preview-btn">Visualizar Contrato</button>
                 <button type="button" id="generate-pdf-btn">Gerar PDF</button>
             </div>
@@ -398,8 +403,10 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
 
     <script>
 
-       
 
+        let dataContrato = '';
+        let descItens = '';
+        let dataInicio = '';
         // Funções auxiliares
         function formatarValor(valor) {
             return parseFloat(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -407,7 +414,7 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
 
         function formatarData(data) {
             const d = new Date(data);
-            const dia = d.getDate().toString().padStart(2, '0');
+            const dia = (d.getDate() + 1).toString().padStart(2, '0');
             const mes = (d.getMonth() + 1).toString().padStart(2, '0');
             const ano = d.getFullYear();
             return `${dia}/${mes}/${ano}`;
@@ -469,8 +476,11 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
             const locatarioRG = document.getElementById('locatario-rg').value;
             const locatarioEndereco = document.getElementById('locatario-endereco').value;
 
-            const descItens = document.getElementById('desc-itens').value;
-            const dataInicio = document.getElementById('data-inicio').value;
+            const dataAtual = new Date();
+            dataAtual.setDate(dataAtual.getDate() + 1);
+
+            descItens = document.getElementById('desc-itens').value;
+            dataInicio = document.getElementById('data-inicio').value
             const duracaoDias = document.getElementById('duracao-dias').value;
             const localRetirada = document.getElementById('local-retirada').value;
             const valorAluguel = document.getElementById('valor-aluguel').value;
@@ -479,14 +489,11 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
             const cidadeContrato = document.getElementById('cidade-contrato').value;
             const estadoContrato = document.getElementById('estado-contrato').value;
 
-            const dataContratoInput = document.getElementById('data-contrato');
-            const dataAtual = new Date();
-            dataAtual.setDate(dataAtual.getDate()+1);
+           /* const dataContratoInput = document.getElementById('data-contrato');
+           
+            dataContratoInput.valueAsDate = dataAtual;*/
 
-            dataContratoInput.valueAsDate = dataAtual;
-
-            
-            const dataContrato = document.getElementById('data-contrato').value;
+            dataContrato = document.getElementById('data-contrato').value;
 
             // Calcular a data de fim
             const dataFim = calcularDataFim(dataInicio, duracaoDias);
@@ -537,7 +544,11 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
 
         // Event listeners
         document.getElementById('back').addEventListener('click', function () {
-             window.location.href = 'index.html'; // Ajuste 
+            window.location.href = 'index.html';  
+        });
+
+         document.getElementById('verContratos').addEventListener('click', function () {
+            window.location.href = 'lista-contratos.html';  
         });
         // Event listeners
         document.getElementById('preview-btn').addEventListener('click', function () {
@@ -612,6 +623,7 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
 
                 // Salvar o PDF
                 pdf.save(`CONTRATO_${locatarioNome}_${dataHoje}.pdf`);
+                adicionarDocumento(locatarioNome, formatarData(dataInicio), descItens);
             });
         }
     </script>
