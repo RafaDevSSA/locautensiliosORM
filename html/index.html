@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loca Utensilios </title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            height: 100vh;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-image: url('locaimage.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Overlay para escurecer um pouco a imagem e destacar os botões */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            width: 90%;
+            max-width: 800px;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+        
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            width: 100%;
+        }
+        
+        .button {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 120px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 1.8rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            padding: 15px;
+        }
+        
+        .button:hover {
+            transform: translateY(-5px);
+            background-color: white;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .button.primary {
+            background-color: rgba(66, 133, 244, 0.9);
+            color: white;
+        }
+        
+        .button.primary:hover {
+            background-color: rgb(66, 133, 244);
+        }
+        
+        .button.secondary {
+            background-color: rgba(234, 67, 53, 0.9);
+            color: white;
+        }
+        
+        .button.secondary:hover {
+            background-color: rgb(234, 67, 53);
+        }
+        
+        /* Faixa para links menores ou informações */
+        .footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            z-index: 2;
+        }
+        
+        /* Responsividade */
+        @media (min-width: 768px) {
+            .buttons {
+                flex-direction: row;
+                justify-content: center;
+            }
+            
+            .button {
+                width: 45%;
+                height: 150px;
+            }
+            
+            .header h1 {
+                font-size: 3.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Bem-vindo</h1>
+        </div>
+        
+        <div class="buttons">
+            <a href="contrato.html" class="button primary">CRIAR CONTRATO</a>
+            <a href="orcamento.html" class="button secondary">CRIAR ORÇAMENTO</a>
+        </div>
+    </div>
+    
+    <div class="footer">
+        © 2025 Sistema de Contratos • Todos os direitos reservados
+    </div>
+    
+    <script>
+        // Função para alterar o plano de fundo com imagens melhores
+        // Você pode substituir este código quando tiver uma imagem real
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lista de opções de planos de fundo
+            const backgrounds = [
+                'locaimage.png', // Imagens temporárias
+                'locaimage.png'
+            ];
+            
+            // Selecionar aleatoriamente uma imagem
+            const randomBg = backgrounds[Math.floor(Math.random() * backgrounds.length)];
+            
+            // Aplicar a imagem como plano de fundo
+            document.body.style.backgroundImage = `url('${randomBg}')`;
+        });
+        
+        // Função para fazer os botões pulsarem suavemente
+        const buttons = document.querySelectorAll('.button');
+        
+        function pulseButtons() {
+            buttons.forEach(button => {
+                setTimeout(() => {
+                    button.style.transform = 'translateY(-3px)';
+                    
+                    setTimeout(() => {
+                        button.style.transform = 'translateY(0)';
+                    }, 300);
+                }, Math.random() * 2000);
+            });
+            
+            // Repetir a animação
+            setTimeout(pulseButtons, 4000);
+        }
+        
+        // Iniciar a animação dos botões após 2 segundos
+        setTimeout(pulseButtons, 1000);
+    </script>
+</body>
+</html>

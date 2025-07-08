@@ -1,0 +1,38 @@
+name: Build and Push Docker Image
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        username: ${{ secrets.REGISTRY_USERNAME }}
+        password: ${{ secrets.REGISTRY_PASSWORD }}
+        repository: ${{secrets.REGISTRY_USERNAME}}/locautensiliosORM
+        tags: ${{ github.sha}}, latest
+
+        
+
+  # Job opcional para deploy (descomente se necessário)
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+  #   steps:
+  #   - name: Deploy to production
+  #     run: |
+  #       echo "Deploy steps here"
