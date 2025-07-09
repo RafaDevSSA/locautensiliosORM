@@ -1,4 +1,4 @@
-FROM nginx:alpine
+FROM nginx:1.29.0
 
 RUN apt-get update \
     && apt-get install -y bash \
