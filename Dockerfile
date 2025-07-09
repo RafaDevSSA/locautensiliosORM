@@ -1,5 +1,9 @@
 FROM nginx:alpine
 
+RUN apt-get update \
+    && apt-get install -y bash \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY ./html /usr/share/nginx/html
 
 # Opcional: Copiar configuração customizada do nginx
