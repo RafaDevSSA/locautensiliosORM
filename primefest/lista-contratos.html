@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interface Firestore - Leitura de Registros</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .input-group input,
+        .input-group select {
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-2px);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #4f46e5;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .results {
+            padding: 30px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-count {
+            font-size: 1.1rem;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .records-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .record-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .record-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .record-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        }
+
+        .record-id {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-bottom: 10px;
+            font-family: monospace;
+            background: #f3f4f6;
+            padding: 5px 10px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+
+        .record-data {
+            margin-top: 15px;
+        }
+
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .data-item:last-child {
+            border-bottom: none;
+        }
+
+        .data-key {
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.9rem;
+        }
+
+        .data-value {
+            color: #6b7280;
+            font-size: 0.9rem;
+            max-width: 60%;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .no-data-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .input-group input,
+            .input-group select {
+                min-width: 100%;
+            }
+
+            .records-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .data-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .data-value {
+                max-width: 100%;
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 Loca Utensílios - Contratos Ativos</h1>
+            <p>Interface para visualizar contratos</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <div class="input-group">
+                    <label for="collection">Coleção:</label>
+                    <input type="text" id="collection" value="loca-contratos">
+                </div>
+
+                <div class="input-group">
+                    <label for="limit">Limite:</label>
+                    <select id="limit">
+                        <option value="10">10 registros</option>
+                        <option value="25">25 registros</option>
+                        <option value="50">50 registros</option>
+                        <option value="100">100 registros</option>
+                        <option value="">Todos</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="orderBy">Ordenar por:</label>
+                    <input type="text" id="orderBy" placeholder="Campo (ex: nome, idade)">
+                </div>
+
+                <div class="input-group">
+                    <label for="orderDirection">Direção:</label>
+                    <select id="orderDirection">
+                        <option value="asc">Crescente</option>
+                        <option value="desc">Decrescente</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <button class="btn btn-primary" onclick="carregarRegistros()">
+                    📊 Carregar Registros
+                </button>
+                <button class="btn btn-secondary" onclick="limparResultados()">
+                    🗑️ Limpar
+                </button>
+                <button class="btn btn-secondary" onclick="escutarMudancas()">
+                    👂 Escutar Tempo Real
+                </button>
+                <button class="btn btn-secondary" onclick="pararEscuta()" id="stopBtn" style="display: none;">
+                    ⏹️ Parar Escuta
+                </button>
+                <button class="btn btn-secondary" id="back">
+                    voltar
+                </button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Carregando registros...</p>
+        </div>
+
+        <div class="results" id="results" style="display: none;">
+            <div class="results-header">
+                <div class="results-count" id="resultsCount">0 registros encontrados</div>
+                <div id="realTimeStatus" style="color: #16a34a; font-weight: 600; display: none;">
+                    🟢 Tempo real ativo
+                </div>
+            </div>
+            <div class="records-grid" id="recordsGrid">
+                <!-- Registros serão inseridos aqui -->
+            </div>
+        </div>
+
+        <div class="no-data" id="noData" style="display: none;">
+            <div class="no-data-icon">📭</div>
+            <h3>Nenhum registro encontrado</h3>
+            <p>Verifique se a coleção existe e contém dados</p>
+        </div>
+    </div>
+
+    <!-- Firebase CDN -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+
+        document.getElementById('back').addEventListener('click', function () {
+           window.location.href = 'contrato.html';  
+        });   
+        // CONFIGURAÇÃO DO FIREBASE - SUBSTITUA PELOS SEUS VALORES
+        const firebaseConfig = {
+            apiKey: "AIzaSyCRH-aApTh2ZKUsyhzBUvtK3MnxFDvEfEA",
+            authDomain: "dlaw-manager.firebaseapp.com",
+            databaseURL: "https://dlaw-manager.firebaseio.com",
+            projectId: "dlaw-manager",
+            storageBucket: "dlaw-manager.firebasestorage.app",
+            messagingSenderId: "510108987774",
+            appId: "1:510108987774:web:b00cb80a0aa63f74"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let unsubscribe = null;
+
+        function mostrarLoading(show = true) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+            document.getElementById('results').style.display = show ? 'none' : 'block';
+            document.getElementById('noData').style.display = 'none';
+        }
+
+        function mostrarErro(mensagem) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `<div class="error">❌ Erro: ${mensagem}</div>`;
+            resultsDiv.style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function mostrarSucesso(mensagem) {
+            const resultsDiv = document.getElementById('results');
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.innerHTML = `✅ ${mensagem}`;
+            resultsDiv.insertBefore(successDiv, resultsDiv.firstChild);
+            setTimeout(() => successDiv.remove(), 3000);
+        }
+
+        function formatarValor(valor) {
+            if (valor === null) return 'null';
+            if (valor === undefined) return 'undefined';
+            if (valor instanceof Date) return valor.toLocaleString('pt-BR');
+            if (typeof valor === 'object') return JSON.stringify(valor, null, 2);
+            if (typeof valor === 'boolean') return valor ? 'verdadeiro' : 'falso';
+            return String(valor);
+        }
+
+        function criarCardRegistro(doc) {
+            const data = doc.data();
+            const id = doc.id;
+
+            const card = document.createElement('div');
+            card.className = 'record-card';
+            card.innerHTML = `
+                 <span class="data-key" onclick="deletarDocumento('${id}')"> 🗑️ remover</span>
+                <div class="record-data">
+                    ${Object.entries(data).map(([key, value]) => `
+                        <div class="data-item">
+                            <span class="data-key">${key}:</span>
+                            <span class="data-value">${formatarValor(value)}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            return card;
+        }
+
+        function exibirRegistros(querySnapshot) {
+            const grid = document.getElementById('recordsGrid');
+            const count = document.getElementById('resultsCount');
+
+            grid.innerHTML = '';
+
+            if (querySnapshot.empty) {
+                document.getElementById('noData').style.display = 'block';
+                document.getElementById('results').style.display = 'none';
+                return;
+            }
+
+            count.textContent = `${querySnapshot.size} registro${querySnapshot.size !== 1 ? 's' : ''} encontrado${querySnapshot.size !== 1 ? 's' : ''}`;
+
+            querySnapshot.forEach(doc => {
+                const card = criarCardRegistro(doc);
+                grid.appendChild(card);
+            });
+
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('noData').style.display = 'none';
+        }
+
+        async function carregarRegistros() {
+            const collection = document.getElementById('collection').value.trim();
+            const limit = document.getElementById('limit').value;
+            const orderBy = document.getElementById('orderBy').value.trim();
+            const orderDirection = document.getElementById('orderDirection').value;
+
+            if (!collection) {
+                mostrarErro('Por favor, informe o nome da coleção');
+                return;
+            }
+
+            mostrarLoading(true);
+
+            try {
+                let query = db.collection(collection);
+
+                if (orderBy) {
+                    query = query.orderBy(orderBy, orderDirection);
+                }
+
+                if (limit) {
+                    query = query.limit(parseInt(limit));
+                }
+
+                const querySnapshot = await query.get();
+                exibirRegistros(querySnapshot);
+                mostrarLoading(false);
+
+            } catch (error) {
+                console.error('Erro ao carregar registros:', error);
+                mostrarErro(error.message);
+                mostrarLoading(false);
+            }
+        }
+
+        function escutarMudancas() {
+            const collection = document.getElementById('collection').value.trim();
+
+            if (!collection) {
+                mostrarErro('Por favor, informe o nome da coleção');
+                return;
+            }
+
+            if (unsubscribe) {
+                pararEscuta();
+            }
+
+            const limit = document.getElementById('limit').value;
+            const orderBy = document.getElementById('orderBy').value.trim();
+            const orderDirection = document.getElementById('orderDirection').value;
+
+            let query = db.collection(collection);
+
+            if (orderBy) {
+                query = query.orderBy(orderBy, orderDirection);
+            }
+
+            if (limit) {
+                query = query.limit(parseInt(limit));
+            }
+
+            unsubscribe = query.onSnapshot(
+                (querySnapshot) => {
+                    exibirRegistros(querySnapshot);
+                    mostrarLoading(false);
+
+                    // Mostrar mudanças
+                    querySnapshot.docChanges().forEach((change) => {
+                        if (change.type === "added") {
+                            console.log("Novo documento: ", change.doc.data());
+                        }
+                        if (change.type === "modified") {
+                            console.log("Documento modificado: ", change.doc.data());
+                        }
+                        if (change.type === "removed") {
+                            console.log("Documento removido: ", change.doc.data());
+                        }
+                    });
+                },
+                (error) => {
+                    console.error('Erro na escuta em tempo real:', error);
+                    mostrarErro(error.message);
+                }
+            );
+
+            document.getElementById('realTimeStatus').style.display = 'block';
+            document.getElementById('stopBtn').style.display = 'inline-flex';
+            mostrarSucesso('Escuta em tempo real ativada!');
+        }
+
+        function pararEscuta() {
+            if (unsubscribe) {
+                unsubscribe();
+                unsubscribe = null;
+                document.getElementById('realTimeStatus').style.display = 'none';
+                document.getElementById('stopBtn').style.display = 'none';
+                mostrarSucesso('Escuta em tempo real desativada!');
+            }
+        }
+
+        function limparResultados() {
+            document.getElementById('recordsGrid').innerHTML = '';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('noData').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+            pararEscuta();
+        }
+
+        // Tecla Enter para carregar
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                carregarRegistros();
+            }
+        });
+
+        // Deletar documento
+        async function deletarDocumento(id) {
+            try {
+                await db.collection("loca-contratos").doc(id).delete();
+                console.log("Documento deletado com sucesso!");
+                carregarRegistros();
+            } catch (e) {
+                console.error("Erro ao deletar documento: ", e);
+            }
+        };
+
+
+        // Limpar escuta ao fechar a página
+        window.addEventListener('beforeunload', pararEscuta);
+    </script>
+</body>
+
+</html>
