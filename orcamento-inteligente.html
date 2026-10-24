@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Orçamento Inteligente - LOCAUTENSÍLIOS</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+  <link rel="stylesheet" href="css/smart.css">
+  <style>
+    :root {
+      --primary-color: #4A6FFF;
+      --secondary-color: #6C7AE0;
+      --text-color: #333;
+      --light-gray: #f5f7fa;
+      --border-color: #e1e5eb;
+      --success-color: #34c759;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f9fafb;
+      color: var(--text-color);
+      line-height: 1.6;
+      padding: 10px;
+    }
+
+    .form-container {
+      max-width: 1000px;
+      margin: 10px auto;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      margin-bottom: 16px;
+      font-weight: 600;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      font-size: 14px;
+      color: #4a5568;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      font-size: 16px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 0 3px rgba(108, 122, 224, 0.15);
+    }
+
+    button {
+      cursor: pointer;
+      padding: 10px 16px;
+      border-radius: var(--radius);
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-action {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 12px 18px;
+      font-size: 16px;
+    }
+
+    .btn-action:hover {
+      background-color: var(--secondary-color);
+      box-shadow: 0 4px 12px rgba(74, 111, 255, 0.25);
+    }
+
+    .form-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      flex: 1 1 260px;
+    }
+
+    /* Lista de itens: uma única estrutura, responsiva por CSS (sem duplicar desktop/mobile) */
+    .itens-cab,
+    .item-linha {
+      display: grid;
+      grid-template-columns: 36px minmax(180px, 1fr) 130px 90px 120px 100px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .itens-cab {
+      background: var(--primary-color);
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .item-linha {
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .item-linha:hover {
+      background-color: var(--light-gray);
+    }
+
+    .item-linha .campo label {
+      display: none;
+    }
+
+    .item-linha input {
+      padding: 8px;
+      font-size: 15px;
+    }
+
+    .item-num {
+      font-weight: 600;
+      color: var(--primary-color);
+      text-align: center;
+    }
+
+    .out-total {
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .remove-product-btn {
+      background-color: #ff4a6e;
+      color: white;
+      width: 100%;
+    }
+
+    .remove-product-btn:hover {
+      background-color: #e03c5e;
+    }
+
+    .add-product-btn {
+      background-color: #34c759;
+      color: white;
+      margin: 14px 0 20px;
+    }
+
+    .add-product-btn:hover {
+      background-color: #2db950;
+    }
+
+    @media (max-width: 768px) {
+      .itens-cab {
+        display: none;
+      }
+
+      .item-linha {
+        grid-template-columns: 1fr 1fr;
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius);
+        margin-bottom: 12px;
+        padding: 12px;
+      }
+
+      .item-linha .campo label {
+        display: block;
+        font-size: 13px;
+        color: #6b7280;
+      }
+
+      .item-num {
+        grid-column: 1 / -1;
+        text-align: left;
+      }
+
+      .item-linha .desc {
+        grid-column: 1 / -1;
+      }
+
+      .item-linha .remove-product-btn {
+        grid-column: 1 / -1;
+      }
+    }
+
+    .totais {
+      background-color: var(--light-gray);
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .totais .linha {
+      font-size: 15px;
+      color: #4a5568;
+    }
+
+    .totais .linha.final {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .success-message {
+      display: none;
+      background-color: var(--success-color);
+      color: white;
+      padding: 16px;
+      border-radius: var(--radius);
+      margin-top: 20px;
+      text-align: center;
+      font-weight: 500;
+    }
+
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    @media (max-width: 640px) {
+      .form-actions button {
+        flex: 1 1 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="form-container">
+    <h1>Orçamento Inteligente - LOCAUTENSÍLIOS</h1>
+
+    <div class="topbar">
+      <button type="button" id="back" class="btn-action">Voltar</button>
+      <a href="orcamento.html">Usar o formulário clássico</a>
+    </div>
+
+    <section class="smart-box">
+      <label for="texto">Descreva o orçamento em texto livre</label>
+      <textarea id="texto"
+        placeholder="Ex.: Maria Souza, 15/11, 100 pratos de porcelana 26cm a 2,50, 100 taças a 3, 20 réchauds a 12, desconto 10%"></textarea>
+      <div class="smart-actions">
+        <button type="button" id="interpretar" class="btn-action">Interpretar texto</button>
+        <button type="button" id="exemplo" class="btn-ghost">Inserir exemplo</button>
+        <button type="button" id="limpar" class="btn-ghost">Limpar</button>
+      </div>
+      <small class="smart-hint">
+        Separe as partes com vírgula, ponto e vírgula, hífen ou quebra de linha. Cada item: quantidade + nome + preço
+        ("100 pratos a 2,50"). Datas: 15/11, dia 15 de novembro, sábado, amanhã. Desconto: "desconto 10%".
+        Atalho: Ctrl+Enter. O texto sobrescreve o formulário abaixo, onde tudo pode ser ajustado.
+      </small>
+      <div id="avisos" class="avisos" aria-live="polite"></div>
+    </section>
+
+    <form id="pdfForm" novalidate>
+      <div class="secao-titulo">Dados do orçamento</div>
+      <div class="form-header">
+        <div class="form-group">
+          <label for="nomeCliente">Nome do Cliente</label>
+          <input type="text" id="nomeCliente" name="nomeCliente" placeholder="Digite o nome completo">
+        </div>
+        <div class="form-group">
+          <label for="dataLocacao">Data de Locação</label>
+          <input type="date" id="dataLocacao" name="dataLocacao">
+        </div>
+        <div class="form-group">
+          <label for="desconto">Desconto %</label>
+          <input type="number" id="desconto" name="desconto" min="5" max="100" step="any" inputmode="decimal">
+        </div>
+      </div>
+
+      <div class="secao-titulo">Itens</div>
+      <div class="itens-cab" aria-hidden="true">
+        <span>Nº</span><span>Descrição do Produto</span><span>Preço Unit.</span><span>Qtde</span><span>Total</span><span>Ação</span>
+      </div>
+      <div id="itensLista"></div>
+      <datalist id="catalogoItens"></datalist>
+
+      <button type="button" class="add-product-btn" id="adicionarItem">+ Adicionar Produto</button>
+
+      <div class="totais" id="totais" aria-live="polite">
+        <div class="linha" id="linhaSubtotal"></div>
+        <div class="linha" id="linhaDesconto"></div>
+        <div class="linha final" id="linhaTotal"></div>
+      </div>
+
+      <div id="erros" class="avisos" aria-live="polite"></div>
+
+      <div class="form-actions">
+        <button type="button" id="copiarWhats" class="btn-ghost">Copiar texto para WhatsApp</button>
+        <button type="button" id="gerarPdf" class="btn-action">Gerar Orçamento PDF</button>
+      </div>
+    </form>
+
+    <div id="successMessage" class="success-message">PDF gerado com sucesso! O download começará automaticamente.</div>
+  </div>
+
+  <script src="js/utils.js"></script>
+  <script src="js/catalogo.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/smart-ui.js"></script>
+  <script src="js/logo.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const U = window.LocaUtils;
+      const P = window.LocaParser;
+      const UI = window.LocaUI;
+      const CHAVE_RASCUNHO = 'loca.orcamento.texto';
+      const EXEMPLO = 'Maria Souza, 15/11, 100 pratos de porcelana 26cm a 2,50, 100 taças a 3, 20 réchauds a 12, desconto 10%';
+      const $ = (id) => document.getElementById(id);
+
+      let itens = [];
+
+      const novoItem = () => ({ descricao: '', quantidade: 1, preco: null });
+
+      // ---------- Catálogo para autocompletar ----------
+      window.LocaCatalogo.forEach((c) => {
+        const o = document.createElement('option');
+        o.value = c.nome;
+        $('catalogoItens').appendChild(o);
+      });
+
+      // ---------- Cálculo (sempre a partir dos dados, nunca lendo texto da tela) ----------
+      function calcular() {
+        const linhas = itens.map((i) => {
+          const q = Number(i.quantidade) || 0;
+          const p = i.preco === null || i.preco === '' ? 0 : Number(i.preco) || 0;
+          return Math.round(q * p * 100) / 100;
+        });
+        const subtotal = Math.round(linhas.reduce((s, v) => s + v, 0) * 100) / 100;
+        const descPct = parseFloat($('desconto').value) || 0;
+        const valorDesc = Math.round(subtotal * descPct) / 100;
+        const total = Math.round((subtotal - valorDesc) * 100) / 100;
+        return { linhas, subtotal, descPct, valorDesc, total };
+      }
+
+      function atualizarTotais() {
+        const c = calcular();
+        document.querySelectorAll('.item-linha').forEach((row, i) => {
+          row.querySelector('.out-total').textContent = `R$ ${U.formatarMoeda(c.linhas[i])}`;
+        });
+        $('linhaSubtotal').textContent = c.descPct ? `Subtotal: R$ ${U.formatarMoeda(c.subtotal)}` : '';
+        $('linhaDesconto').textContent = c.descPct ? `Desconto (${c.descPct}%): - R$ ${U.formatarMoeda(c.valorDesc)}` : '';
+        $('linhaTotal').textContent = `${c.descPct ? 'Total com desconto' : 'Total'}: R$ ${U.formatarMoeda(c.total)}`;
+        return c;
+      }
+
+      // ---------- Lista de itens ----------
+      function renderItens() {
+        const lista = $('itensLista');
+        lista.textContent = '';
+        itens.forEach((item, i) => {
+          const row = document.createElement('div');
+          row.className = 'item-linha';
+          row.innerHTML = `
+            <span class="item-num"></span>
+            <div class="campo desc"><label>Descrição do Produto</label>
+              <input type="text" class="in-desc" list="catalogoItens" placeholder="Nome do produto"></div>
+            <div class="campo"><label>Preço Unitário (R$)</label>
+              <input type="number" class="in-preco" step="0.01" min="0" placeholder="0,00" inputmode="decimal"></div>
+            <div class="campo"><label>Quantidade</label>
+              <input type="number" class="in-qtd" min="1" step="1" inputmode="numeric"></div>
+            <div class="campo"><label>Total</label><output class="out-total">R$ 0,00</output></div>
+            <button type="button" class="remove-product-btn">Remover</button>`;
+          row.querySelector('.item-num').textContent = i + 1;
+          const desc = row.querySelector('.in-desc');
+          const preco = row.querySelector('.in-preco');
+          const qtd = row.querySelector('.in-qtd');
+          desc.value = item.descricao;
+          preco.value = item.preco === null ? '' : String(item.preco);
+          qtd.value = String(item.quantidade);
+
+          desc.addEventListener('input', () => { item.descricao = desc.value; UI.marcarCampo(desc, ''); });
+          preco.addEventListener('input', () => {
+            item.preco = preco.value === '' ? null : parseFloat(preco.value);
+            UI.marcarCampo(preco, '');
+            atualizarTotais();
+          });
+          qtd.addEventListener('input', () => {
+            item.quantidade = parseInt(qtd.value, 10) || 0;
+            UI.marcarCampo(qtd, '');
+            atualizarTotais();
+          });
+          row.querySelector('.remove-product-btn').addEventListener('click', () => {
+            if (itens.length <= 1) { alert('É necessário ter pelo menos um produto!'); return; }
+            itens.splice(itens.indexOf(item), 1);
+            renderItens();
+          });
+          lista.appendChild(row);
+        });
+        atualizarTotais();
+      }
+
+      function marcarItensInterpretados() {
+        document.querySelectorAll('.item-linha').forEach((row, i) => {
+          UI.marcarCampo(row.querySelector('.in-desc'), itens[i].descricao ? 'ok' : 'falta');
+          UI.marcarCampo(row.querySelector('.in-preco'), itens[i].preco === null ? 'falta' : 'ok');
+          UI.marcarCampo(row.querySelector('.in-qtd'), 'ok');
+        });
+      }
+
+      // ---------- Interpretação do texto ----------
+      function interpretar() {
+        const texto = $('texto').value;
+        UI.guardar(CHAVE_RASCUNHO, texto);
+        $('erros').textContent = '';
+        $('erros').className = 'avisos';
+        if (!texto.trim()) {
+          UI.mostrarAvisos($('avisos'), ['Digite ou cole o texto do orçamento.'], '');
+          return;
+        }
+        const r = P.interpretarOrcamento(texto);
+
+        $('nomeCliente').value = r.cliente;
+        $('dataLocacao').value = r.dataLocacao;
+        $('desconto').value = r.desconto === null ? '' : String(r.desconto);
+        UI.marcarCampo($('nomeCliente'), r.cliente ? 'ok' : 'falta');
+        UI.marcarCampo($('dataLocacao'), r.dataLocacao ? 'ok' : 'falta');
+        UI.marcarCampo($('desconto'), r.desconto === null ? '' : 'ok');
+
+        itens = r.itens.length
+          ? r.itens.map((i) => ({ descricao: i.descricao, quantidade: i.quantidade, preco: i.preco }))
+          : [novoItem()];
+        renderItens();
+        marcarItensInterpretados();
+
+        UI.mostrarAvisos($('avisos'), r.avisos,
+          'Texto interpretado: confira os campos abaixo (verde = encontrado, laranja = revisar) e gere o PDF.');
+      }
+
+      // ---------- Validação ----------
+      function validar() {
+        const erros = [];
+        if (!$('nomeCliente').value.trim()) erros.push('Informe o nome do cliente.');
+        if (!$('dataLocacao').value) erros.push('Informe a data de locação.');
+        const d = $('desconto').value;
+        if (d !== '' && (parseFloat(d) < 5 || parseFloat(d) > 100)) erros.push('Descontos permitidos entre 5 e 100%.');
+        itens.forEach((it, i) => {
+          if (!String(it.descricao).trim()) erros.push(`Item ${i + 1}: preencha a descrição.`);
+          if (!(it.quantidade >= 1)) erros.push(`Item ${i + 1}: informe a quantidade.`);
+          if (it.preco === null || Number.isNaN(it.preco) || it.preco < 0) erros.push(`Item ${i + 1}: informe o preço.`);
+        });
+        UI.mostrarAvisos($('erros'), erros, '');
+        if (!erros.length) { $('erros').className = 'avisos'; $('erros').textContent = ''; }
+        return erros.length === 0;
+      }
+
+      // ---------- PDF (mesmo layout do orçamento clássico) ----------
+      function gerarPDF() {
+        if (!validar()) return;
+        const { jsPDF } = window.jspdf;
+        const c = calcular();
+        const cliente = $('nomeCliente').value.trim();
+        const doc = new jsPDF();
+
+        try { doc.addImage(window.LOGO_BASE64, 'PNG', 10, 10, 40, 40); } catch (e) { /* segue sem logo */ }
+        doc.setFontSize(22);
+        doc.text('Orçamento', 105, 30, { align: 'center' });
+        doc.setFontSize(14);
+        doc.text(U.mesAno(), 190, 30, { align: 'right' });
+
+        doc.setFontSize(12);
+        doc.text('Nome cliente:', 20, 50);
+        doc.text(cliente, 75, 50);
+        doc.text('Data de locação:', 20, 60);
+        doc.text(U.formatarDataBR($('dataLocacao').value), 75, 60);
+
+        const dados = itens.map((it, i) => [
+          i + 1,
+          it.descricao.trim(),
+          `R$ ${U.formatarMoeda(it.preco)}`,
+          it.quantidade,
+          `R$ ${U.formatarMoeda(c.linhas[i])}`
+        ]);
+
+        doc.autoTable({
+          startY: 70,
+          head: [['Nº', 'Descrição do Produto', 'Preço', 'Qt', 'Total']],
+          body: dados,
+          theme: 'striped',
+          headStyles: { fillColor: [0, 0, 0], textColor: [255, 255, 255], fontStyle: 'bold' }
+        });
+
+        let y = doc.previousAutoTable.finalY;
+        if (y > 255) { doc.addPage(); y = 10; }
+        doc.setFontSize(12);
+        if (c.descPct) {
+          doc.setFillColor(255, 255, 0);
+          doc.rect(155, y + 5, 35, 10, 'F');
+          doc.text('Total com desconto:', 145, y + 10, { align: 'right' });
+        } else {
+          doc.text('Total:', 145, y + 10, { align: 'right' });
+        }
+        doc.text(`R$ ${U.formatarMoeda(c.total)}`, 185, y + 10, { align: 'right' });
+
+        const paginas = doc.getNumberOfPages();
+        for (let p = 1; p <= paginas; p++) {
+          doc.setPage(p);
+          doc.setFontSize(10);
+          doc.text('@LOCAUTENSILIOS', 105, 280, { align: 'center' });
+          doc.text('WhatsApp: (71)99985-1506', 105, 285, { align: 'center' });
+        }
+
+        doc.save(`Orcamento-Locautensilios-${cliente.replace(/[\\/:*?"<>|]+/g, '')}.pdf`);
+
+        const ok = $('successMessage');
+        ok.style.display = 'block';
+        setTimeout(() => { ok.style.display = 'none'; }, 4000);
+      }
+
+      // ---------- Texto para WhatsApp ----------
+      async function copiarWhats() {
+        if (!validar()) return;
+        const c = calcular();
+        const linhas = itens.map((it, i) =>
+          `${i + 1}) ${it.quantidade} x ${it.descricao.trim()} - R$ ${U.formatarMoeda(it.preco)} = R$ ${U.formatarMoeda(c.linhas[i])}`);
+        const texto = [
+          '*Orçamento LOCAUTENSÍLIOS*',
+          `Cliente: ${$('nomeCliente').value.trim()}`,
+          `Data de locação: ${U.formatarDataBR($('dataLocacao').value)}`,
+          '',
+          ...linhas,
+          '',
+          c.descPct ? `Desconto: ${c.descPct}%` : null,
+          `*${c.descPct ? 'Total com desconto' : 'Total'}: R$ ${U.formatarMoeda(c.total)}*`
+        ].filter((l) => l !== null).join('\n');
+        const ok = await UI.copiar(texto);
+        UI.mostrarAvisos($('erros'), [], ok ? 'Texto copiado! É só colar no WhatsApp.' : '');
+        if (!ok) UI.mostrarAvisos($('erros'), ['Não consegui copiar automaticamente; selecione e copie manualmente.'], '');
+      }
+
+      // ---------- Eventos ----------
+      $('back').addEventListener('click', () => { window.location.href = 'index.html'; });
+      $('interpretar').addEventListener('click', interpretar);
+      $('texto').addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); interpretar(); }
+      });
+      $('texto').addEventListener('input', UI.debounce(() => UI.guardar(CHAVE_RASCUNHO, $('texto').value), 400));
+      $('exemplo').addEventListener('click', () => { $('texto').value = EXEMPLO; $('texto').focus(); });
+      $('limpar').addEventListener('click', () => {
+        $('texto').value = '';
+        UI.guardar(CHAVE_RASCUNHO, '');
+        $('pdfForm').reset();
+        document.querySelectorAll('.campo-ok, .campo-falta').forEach((el) => UI.marcarCampo(el, ''));
+        itens = [novoItem()];
+        renderItens();
+        $('avisos').textContent = '';
+        $('avisos').className = 'avisos';
+        $('erros').textContent = '';
+        $('erros').className = 'avisos';
+      });
+      $('adicionarItem').addEventListener('click', () => {
+        itens.push(novoItem());
+        renderItens();
+        const ultimos = document.querySelectorAll('.in-desc');
+        ultimos[ultimos.length - 1].focus();
+      });
+      $('desconto').addEventListener('input', () => { UI.marcarCampo($('desconto'), ''); atualizarTotais(); });
+      ['nomeCliente', 'dataLocacao'].forEach((id) =>
+        $(id).addEventListener('input', () => UI.marcarCampo($(id), '')));
+      $('gerarPdf').addEventListener('click', gerarPDF);
+      $('copiarWhats').addEventListener('click', copiarWhats);
+      $('pdfForm').addEventListener('submit', (e) => e.preventDefault());
+
+      // ---------- Início ----------
+      $('texto').value = UI.ler(CHAVE_RASCUNHO);
+      itens = [novoItem()];
+      renderItens();
+    })();
+  </script>
+</body>
+
+</html>
