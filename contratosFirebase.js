@@ -131,3 +131,30 @@ const escutarMudancas = () => {
     // Para parar de escutar: unsubscribe();
     return unsubscribe;
 };
+
+
+// ---------------------------------------------------------------------------
+// Contratos completos (schemaVersion 2)
+// Guarda TODOS os dados do contrato, para poder gerar o PDF de novo com um clique
+// na tela "Ver contratos". Requer js/contrato.js carregado na página.
+// ---------------------------------------------------------------------------
+
+// Salva o contrato. Devolve o ID do documento; lança erro se não conseguir salvar.
+const salvarContrato = async (dados) => {
+    const agora = firebase.firestore.FieldValue.serverTimestamp();
+    const docRef = await db.collection("loca-contratos").add({
+        ...LocaContrato.paraFirestore(dados),
+        criadoEm: agora,
+        ultimoPdfEm: agora,
+        pdfCount: 1
+    });
+    return docRef.id;
+};
+
+// Registra que o PDF de um contrato salvo foi gerado de novo.
+const registrarGeracaoPdf = async (id) => {
+    await db.collection("loca-contratos").doc(id).update({
+        pdfCount: firebase.firestore.FieldValue.increment(1),
+        ultimoPdfEm: firebase.firestore.FieldValue.serverTimestamp()
+    });
+};
