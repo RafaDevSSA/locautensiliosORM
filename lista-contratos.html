@@ -4,616 +4,1539 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interface Firestore - Leitura de Registros</title>
+    <title>Contratos - Loca Utensílios</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="./contratosFirebase.js"></script>
+    <link rel="stylesheet" href="css/salvar.css">
     <style>
+        :root {
+            --pine: #143a2b;
+            --pine-2: #1d523c;
+            --pine-3: #2a6b50;
+            --ink: #16211c;
+            --muted: #5d6b64;
+            --line: #dde3df;
+            --bg: #eff2f0;
+            --surface: #ffffff;
+            --soft: #f6f8f7;
+            --saffron: #c98a12;
+            --saffron-bg: #fdf3dc;
+            --blue: #2a64a8;
+            --blue-bg: #e6eefa;
+            --green: #1b7a4a;
+            --green-bg: #e0f3e8;
+            --grey: #5d6b64;
+            --grey-bg: #e9edea;
+            --red: #b3261e;
+            --red-bg: #fbe8e6;
+            --radius: 10px;
+            --side: 232px;
+        }
+
         * {
-            margin: 0;
-            padding: 0;
             box-sizing: border-box;
         }
 
+        html {
+            -webkit-text-size-adjust: 100%;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-size: 15px;
+            line-height: 1.45;
+        }
+
+        h1,
+        h2,
+        h3,
+        p {
+            margin: 0;
+        }
+
+        button,
+        input,
+        select {
+            font: inherit;
+            color: inherit;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--pine-3);
+            outline-offset: 2px;
+        }
+
+        .num {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ---------- Estrutura ---------- */
+        .app {
+            display: grid;
+            grid-template-columns: var(--side) minmax(0, 1fr);
             min-height: 100vh;
-            padding: 20px;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            backdrop-filter: blur(10px);
-        }
-
-        .header {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .controls {
-            padding: 30px;
-            background: #f8fafc;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .control-group {
+        .side {
+            background: var(--pine);
+            color: #dfeae4;
+            padding: 20px 14px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
             display: flex;
-            gap: 15px;
+            flex-direction: column;
+            gap: 22px;
+        }
+
+        .brand {
+            display: flex;
             align-items: center;
+            gap: 11px;
+            padding: 0 6px;
+        }
+
+        .brand-mark {
+            flex: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 9px;
+            background: #e9c46a;
+            color: var(--pine);
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            font-size: 19px;
+        }
+
+        .brand strong {
+            display: block;
+            color: #fff;
+            font-size: 15px;
+            line-height: 1.2;
+        }
+
+        .brand small {
+            color: #9fb9ab;
+            font-size: 12px;
+        }
+
+        .side nav {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .side nav a {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            padding: 9px 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 14.5px;
+            color: #c9dad1;
+        }
+
+        .side nav a:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+
+        .side nav a.ativo {
+            background: rgba(255, 255, 255, 0.14);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .side nav .grupo {
+            margin: 14px 10px 4px;
+            font-size: 12px;
+            color: #86a595;
+        }
+
+        .side svg {
+            flex: none;
+        }
+
+        main {
+            padding: 24px clamp(16px, 3vw, 36px) 48px;
+            min-width: 0;
+        }
+
+        .topo {
+            display: flex;
+            align-items: center;
+            gap: 16px;
             flex-wrap: wrap;
             margin-bottom: 20px;
         }
 
-        .input-group {
+        .topo h1 {
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        .topo .sub {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        .topo-acoes {
+            margin-left: auto;
             display: flex;
-            flex-direction: column;
-            gap: 5px;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
         }
 
-        .input-group label {
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.9rem;
+        .menu-btn {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: var(--surface);
+            cursor: pointer;
+            place-items: center;
         }
 
-        .input-group input,
-        .input-group select {
-            padding: 12px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            min-width: 150px;
+        .busca {
+            position: relative;
         }
 
-        .input-group input:focus,
-        .input-group select:focus {
-            outline: none;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        .busca svg {
+            position: absolute;
+            left: 11px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            pointer-events: none;
+        }
+
+        .busca input {
+            width: min(340px, 70vw);
+            height: 40px;
+            padding: 0 12px 0 36px;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: var(--surface);
+            font-size: 15px;
+        }
+
+        .busca input::placeholder {
+            color: #8a9791;
         }
 
         .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
-        }
-
-        .btn-secondary {
-            background: #6b7280;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #4b5563;
-            transform: translateY(-2px);
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 40px;
-            color: #6b7280;
-        }
-
-        .spinner {
-            border: 4px solid #f3f4f6;
-            border-top: 4px solid #4f46e5;
-            border-radius: 50%;
-            width: 40px;
             height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .results {
-            padding: 30px;
-        }
-
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .results-count {
-            font-size: 1.1rem;
-            color: #374151;
+            padding: 0 16px;
+            border-radius: 9px;
+            border: 1px solid var(--line);
+            background: var(--surface);
             font-weight: 600;
+            font-size: 14.5px;
+            cursor: pointer;
+            text-decoration: none;
+            white-space: nowrap;
         }
 
-        .records-grid {
+        .btn:hover {
+            background: var(--soft);
+        }
+
+        .btn.primario {
+            background: var(--pine-2);
+            border-color: var(--pine-2);
+            color: #fff;
+        }
+
+        .btn.primario:hover {
+            background: var(--pine);
+        }
+
+        .btn.perigo {
+            background: var(--red);
+            border-color: var(--red);
+            color: #fff;
+        }
+
+        .btn.pequeno {
+            height: 32px;
+            padding: 0 11px;
+            font-size: 13.5px;
+            border-radius: 8px;
+        }
+
+        .btn[disabled] {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-icone {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: inline-grid;
+            place-items: center;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+        }
+
+        .btn-icone:hover {
+            background: var(--red-bg);
+            color: var(--red);
+        }
+
+        /* ---------- Indicadores ---------- */
+        .kpis {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
         }
 
-        .record-card {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s ease;
-            position: relative;
+        .kpi {
+            padding: 16px 20px;
+            border-left: 1px solid var(--line);
+            min-width: 0;
+        }
+
+        .kpi:first-child {
+            border-left: 0;
+        }
+
+        .kpi .rotulo {
+            font-size: 13px;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .kpi .valor {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-top: 2px;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ponto {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--saffron);
+            flex: none;
+        }
+
+        /* ---------- Lista ---------- */
+        .painel {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
             overflow: hidden;
         }
 
-        .record-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.1);
+        .filtros {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
         }
 
-        .record-card::before {
+        .chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            height: 32px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--surface);
+            font-size: 13.5px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .chip .n {
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .chip:hover {
+            background: var(--soft);
+        }
+
+        .chip[aria-pressed="true"] {
+            background: var(--pine-2);
+            border-color: var(--pine-2);
+            color: #fff;
+        }
+
+        .chip[aria-pressed="true"] .n {
+            color: #bfd6c9;
+        }
+
+        .ordem {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13.5px;
+            color: var(--muted);
+        }
+
+        .ordem select {
+            height: 32px;
+            padding: 0 8px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+            color: var(--ink);
+            font-size: 13.5px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            font-weight: 600;
+            font-size: 12.5px;
+            color: var(--muted);
+            padding: 10px 14px;
+            background: var(--soft);
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+        }
+
+        th.num,
+        td.num {
+            text-align: right;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            vertical-align: middle;
+        }
+
+        tbody tr {
+            cursor: pointer;
+        }
+
+        tbody tr:hover {
+            background: #f9fbfa;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: 0;
+        }
+
+        tbody tr.sel {
+            background: #eef5f1;
+        }
+
+        .cliente {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .avatar {
+            flex: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .a0 {
+            background: #dcebe3;
+            color: #1d523c;
+        }
+
+        .a1 {
+            background: #fbecc8;
+            color: #8a5a00;
+        }
+
+        .a2 {
+            background: #dde7f6;
+            color: #2a64a8;
+        }
+
+        .a3 {
+            background: #efe2f2;
+            color: #7a3c8c;
+        }
+
+        .a4 {
+            background: #f6e0da;
+            color: #a2432c;
+        }
+
+        .cliente .nome {
+            font-weight: 600;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cliente .sub {
+            font-size: 13px;
+            color: var(--muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .cliente>div {
+            min-width: 0;
+        }
+
+        /* Barra do período: quanto da locação já passou */
+        .periodo .datas {
+            font-size: 14px;
+            font-variant-numeric: tabular-nums;
+            white-space: nowrap;
+        }
+
+        .periodo .dur {
+            color: var(--muted);
+            font-size: 13px;
+            margin-left: 6px;
+        }
+
+        .barra {
+            height: 5px;
+            border-radius: 3px;
+            background: var(--grey-bg);
+            margin-top: 7px;
+            width: 150px;
+            max-width: 100%;
+            overflow: hidden;
+        }
+
+        .barra i {
+            display: block;
+            height: 100%;
+            border-radius: 3px;
+            background: var(--green);
+        }
+
+        .barra.fim i {
+            background: #9aa7a0;
+        }
+
+        .barra.hoje i {
+            background: var(--saffron);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 24px;
+            padding: 0 10px;
+            border-radius: 12px;
+            font-size: 12.5px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge::before {
             content: '';
-            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .badge.agendado {
+            color: var(--blue);
+            background: var(--blue-bg);
+        }
+
+        .badge.andamento {
+            color: var(--green);
+            background: var(--green-bg);
+        }
+
+        .badge.hoje {
+            color: #8a5a00;
+            background: var(--saffron-bg);
+        }
+
+        .badge.encerrado {
+            color: var(--grey);
+            background: var(--grey-bg);
+        }
+
+        .badge.legado {
+            color: var(--grey);
+            background: transparent;
+            border: 1px dashed #b4beb8;
+        }
+
+        .acoes {
+            white-space: nowrap;
+            text-align: right;
+        }
+
+        .acoes .btn,
+        .acoes .btn-icone {
+            margin-left: 4px;
+        }
+
+        /* ---------- Estados ---------- */
+        .estado {
+            padding: 56px 24px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .estado h2 {
+            color: var(--ink);
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+
+        .estado p {
+            max-width: 46ch;
+            margin: 0 auto 18px;
+        }
+
+        .estado.erro h2 {
+            color: var(--red);
+        }
+
+        .esqueleto td>div {
+            height: 14px;
+            border-radius: 7px;
+            background: linear-gradient(90deg, #e9eeeb, #f4f7f5, #e9eeeb);
+            background-size: 200% 100%;
+            animation: brilho 1.4s linear infinite;
+        }
+
+        @keyframes brilho {
+            to {
+                background-position: -200% 0;
+            }
+        }
+
+        /* ---------- Painel lateral ---------- */
+        .veu {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 25, 18, 0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 40;
+        }
+
+        .veu.aberto {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .drawer {
+            position: fixed;
             top: 0;
-            left: 0;
             right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            bottom: 0;
+            width: min(500px, 100vw);
+            background: var(--surface);
+            box-shadow: -12px 0 32px rgba(0, 0, 0, 0.18);
+            transform: translateX(104%);
+            transition: transform 0.25s ease;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
         }
 
-        .record-id {
-            font-size: 0.8rem;
-            color: #6b7280;
-            margin-bottom: 10px;
-            font-family: monospace;
-            background: #f3f4f6;
-            padding: 5px 10px;
-            border-radius: 6px;
-            display: inline-block;
+        .drawer.aberto {
+            transform: none;
         }
 
-        .record-data {
-            margin-top: 15px;
+        .drawer-topo {
+            padding: 18px 20px 14px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
         }
 
-        .data-item {
+        .drawer-topo .avatar {
+            width: 46px;
+            height: 46px;
+            font-size: 16px;
+        }
+
+        .drawer-topo h2 {
+            font-size: 20px;
+            line-height: 1.25;
+        }
+
+        .drawer-topo .meta {
+            margin-top: 5px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .drawer-topo .fechar {
+            margin-left: auto;
+            flex: none;
+            width: 34px;
+            height: 34px;
+            border: 0;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+        }
+
+        .drawer-topo .fechar:hover {
+            background: var(--soft);
+        }
+
+        .drawer-acoes {
+            display: flex;
+            gap: 8px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--line);
+            flex-wrap: wrap;
+        }
+
+        .drawer-acoes .btn.primario {
+            flex: 1 1 200px;
+        }
+
+        .drawer-corpo {
+            padding: 6px 20px 28px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .drawer-corpo section {
+            padding: 16px 0 4px;
+        }
+
+        .drawer-corpo h3 {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--pine-2);
+            margin-bottom: 8px;
+        }
+
+        .campos {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 18px;
+            margin: 0;
+        }
+
+        .campos div {
+            min-width: 0;
+        }
+
+        .campos .largo {
+            grid-column: 1 / -1;
+        }
+
+        .campos dt {
+            font-size: 12.5px;
+            color: var(--muted);
+        }
+
+        .campos dd {
+            margin: 1px 0 0;
+            overflow-wrap: anywhere;
+        }
+
+        .texto-longo {
+            white-space: pre-line;
+            background: var(--soft);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 14px;
+        }
+
+        .aviso-legado {
+            background: var(--saffron-bg);
+            border: 1px solid #f0d594;
+            color: #6e4a00;
+            border-radius: 9px;
+            padding: 12px 14px;
+            margin-top: 14px;
+            font-size: 14px;
+        }
+
+        /* ---------- Diálogos ---------- */
+        dialog {
+            border: 0;
+            border-radius: 14px;
+            padding: 0;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            color: var(--ink);
+            max-width: calc(100vw - 24px);
+        }
+
+        dialog::backdrop {
+            background: rgba(10, 25, 18, 0.5);
+        }
+
+        .dlg {
+            padding: 22px 22px 18px;
+            width: 420px;
+            max-width: 100%;
+        }
+
+        .dlg h2 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .dlg p {
+            color: var(--muted);
+        }
+
+        .dlg .rodape {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .dlg-previa {
+            width: 820px;
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+
+        .dlg-previa header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .dlg-previa header h2 {
+            font-size: 16px;
+        }
+
+        .previa {
+            overflow: auto;
+            padding: 28px 34px;
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.5;
+            text-align: justify;
+            background: #fff;
+        }
+
+        .previa .contract-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .previa .signatures {
+            margin-top: 40px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #f3f4f6;
         }
 
-        .data-item:last-child {
-            border-bottom: none;
-        }
-
-        .data-key {
-            font-weight: 600;
-            color: #374151;
-            font-size: 0.9rem;
-        }
-
-        .data-value {
-            color: #6b7280;
-            font-size: 0.9rem;
-            max-width: 60%;
-            text-align: right;
-            word-break: break-word;
-        }
-
-        .no-data {
+        .previa .signature-line {
+            width: 45%;
             text-align: center;
-            padding: 60px 20px;
-            color: #6b7280;
         }
 
-        .no-data-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            opacity: 0.5;
+        .previa .line {
+            border-bottom: 1px solid #000;
+            margin-bottom: 5px;
         }
 
-        .error {
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
+        .live {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--muted);
         }
 
-        .success {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            color: #16a34a;
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
+        .live::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9aa7a0;
         }
 
-        @media (max-width: 768px) {
-            .control-group {
-                flex-direction: column;
-                align-items: stretch;
-            }
+        .live.on::before {
+            background: #2fb36d;
+        }
 
-            .input-group input,
-            .input-group select {
-                min-width: 100%;
-            }
-
-            .records-grid {
+        /* ---------- Telas menores ---------- */
+        @media (max-width: 960px) {
+            .app {
                 grid-template-columns: 1fr;
             }
 
-            .header h1 {
-                font-size: 2rem;
+            .side {
+                position: fixed;
+                z-index: 60;
+                width: 260px;
+                transform: translateX(-104%);
+                transition: transform 0.25s ease;
             }
 
-            .data-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
+            .side.aberto {
+                transform: none;
             }
 
-            .data-value {
-                max-width: 100%;
-                text-align: left;
+            .menu-btn {
+                display: grid;
+            }
+
+            .kpis {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .kpi:nth-child(3) {
+                border-left: 0;
+            }
+
+            .kpi:nth-child(n+3) {
+                border-top: 1px solid var(--line);
+            }
+
+            .kpi {
+                padding: 14px 16px;
+            }
+
+            .kpi .valor {
+                font-size: 22px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .topo-acoes {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .busca {
+                flex: 1;
+            }
+
+            .busca input {
+                width: 100%;
+            }
+
+            .topo-acoes .btn.primario {
+                display: none;
+            }
+
+            thead {
+                display: none;
+            }
+
+            table,
+            tbody,
+            tr,
+            td {
+                display: block;
+                width: 100%;
+            }
+
+            tbody tr {
+                padding: 12px 14px;
+                border-bottom: 1px solid var(--line);
+                display: grid;
+                grid-template-columns: 1fr auto;
+                gap: 8px 10px;
+            }
+
+            tbody tr:last-child {
+                border-bottom: 0;
+            }
+
+            td {
+                padding: 0;
+                border: 0;
+            }
+
+            td.c-cliente {
+                grid-column: 1 / -1;
+            }
+
+            td.c-periodo {
+                grid-column: 1;
+            }
+
+            td.c-valor {
+                grid-column: 2;
+                text-align: right;
+                font-weight: 600;
+            }
+
+            td.c-status {
+                grid-column: 1;
+            }
+
+            td.acoes {
+                grid-column: 2;
+            }
+
+            .drawer-corpo .campos {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            .drawer,
+            .veu,
+            .side {
+                transition: none;
+            }
+
+            .esqueleto td>div {
+                animation: none;
             }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🔥 Loca Utensílios - Contratos Ativos</h1>
-            <p>Interface para visualizar contratos</p>
-        </div>
-
-        <div class="controls">
-            <div class="control-group">
-                <div class="input-group">
-                    <label for="collection">Coleção:</label>
-                    <input type="text" id="collection" value="loca-contratos">
-                </div>
-
-                <div class="input-group">
-                    <label for="limit">Limite:</label>
-                    <select id="limit">
-                        <option value="10">10 registros</option>
-                        <option value="25">25 registros</option>
-                        <option value="50">50 registros</option>
-                        <option value="100">100 registros</option>
-                        <option value="">Todos</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label for="orderBy">Ordenar por:</label>
-                    <input type="text" id="orderBy" placeholder="Campo (ex: nome, idade)">
-                </div>
-
-                <div class="input-group">
-                    <label for="orderDirection">Direção:</label>
-                    <select id="orderDirection">
-                        <option value="asc">Crescente</option>
-                        <option value="desc">Decrescente</option>
-                    </select>
-                </div>
+    <div class="app">
+        <aside class="side" id="side" aria-label="Menu">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">L</span>
+                <span><strong>Loca Utensílios</strong><small>Gestão de locações</small></span>
             </div>
+            <nav>
+                <a class="ativo" href="lista-contratos.html" aria-current="page"><span data-icone="contrato"></span>Contratos</a>
+                <div class="grupo">Criar</div>
+                <a href="contrato.html"><span data-icone="mais"></span>Novo contrato</a>
+                <a href="contrato-inteligente.html"><span data-icone="texto"></span>Contrato por texto</a>
+                <a href="orcamento.html"><span data-icone="mais"></span>Novo orçamento</a>
+                <a href="orcamento-inteligente.html"><span data-icone="texto"></span>Orçamento por texto</a>
+                <div class="grupo">Geral</div>
+                <a href="index.html"><span data-icone="casa"></span>Início</a>
+            </nav>
+        </aside>
 
-            <div class="control-group">
-                <button class="btn btn-primary" onclick="carregarRegistros()">
-                    📊 Carregar Registros
-                </button>
-                <button class="btn btn-secondary" onclick="limparResultados()">
-                    🗑️ Limpar
-                </button>
-                <button class="btn btn-secondary" onclick="escutarMudancas()">
-                    👂 Escutar Tempo Real
-                </button>
-                <button class="btn btn-secondary" onclick="pararEscuta()" id="stopBtn" style="display: none;">
-                    ⏹️ Parar Escuta
-                </button>
-                <button class="btn btn-secondary" id="back">
-                    voltar
-                </button>
-            </div>
-        </div>
-
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>Carregando registros...</p>
-        </div>
-
-        <div class="results" id="results" style="display: none;">
-            <div class="results-header">
-                <div class="results-count" id="resultsCount">0 registros encontrados</div>
-                <div id="realTimeStatus" style="color: #16a34a; font-weight: 600; display: none;">
-                    🟢 Tempo real ativo
+        <main>
+            <header class="topo">
+                <button class="menu-btn" id="menuBtn" type="button" aria-label="Abrir menu" aria-controls="side"
+                    aria-expanded="false"><span data-icone="menu"></span></button>
+                <div>
+                    <h1>Contratos</h1>
+                    <p class="sub"><span id="subtitulo">Carregando…</span> <span class="live" id="live">Offline</span></p>
                 </div>
-            </div>
-            <div class="records-grid" id="recordsGrid">
-                <!-- Registros serão inseridos aqui -->
-            </div>
-        </div>
+                <div class="topo-acoes">
+                    <div class="busca">
+                        <span data-icone="busca"></span>
+                        <input id="busca" type="search" placeholder="Buscar por cliente, CPF ou item"
+                            aria-label="Buscar contratos" autocomplete="off">
+                    </div>
+                    <a class="btn primario" href="contrato.html"><span data-icone="mais"></span>Novo contrato</a>
+                </div>
+            </header>
 
-        <div class="no-data" id="noData" style="display: none;">
-            <div class="no-data-icon">📭</div>
-            <h3>Nenhum registro encontrado</h3>
-            <p>Verifique se a coleção existe e contém dados</p>
-        </div>
+            <section class="kpis" id="kpis" aria-label="Resumo"></section>
+
+            <section class="painel">
+                <div class="filtros">
+                    <div class="chips" id="chips" role="group" aria-label="Filtrar por situação"></div>
+                    <label class="ordem">Ordenar por
+                        <select id="ordem">
+                            <option value="recentes">Salvos recentemente</option>
+                            <option value="inicio">Data de início</option>
+                            <option value="valor">Maior valor</option>
+                            <option value="nome">Cliente (A–Z)</option>
+                        </select>
+                    </label>
+                </div>
+                <div id="lista" aria-live="polite"></div>
+            </section>
+        </main>
     </div>
 
-    <!-- Firebase CDN -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <div class="veu" id="veu"></div>
+    <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawerTitulo" aria-hidden="true"></aside>
 
+    <dialog id="dlgExcluir">
+        <div class="dlg">
+            <h2>Excluir contrato?</h2>
+            <p id="dlgExcluirTexto"></p>
+            <div class="rodape">
+                <button class="btn" type="button" id="dlgExcluirCancelar">Cancelar</button>
+                <button class="btn perigo" type="button" id="dlgExcluirOk">Excluir contrato</button>
+            </div>
+        </div>
+    </dialog>
+
+    <dialog id="dlgPrevia">
+        <div class="dlg-previa">
+            <header>
+                <h2 id="dlgPreviaTitulo">Contrato</h2>
+                <button class="btn pequeno" type="button" id="dlgPreviaFechar">Fechar</button>
+            </header>
+            <div class="previa" id="previa"></div>
+        </div>
+    </dialog>
+
+    <script src="js/utils.js"></script>
+    <script src="js/contrato.js"></script>
     <script>
+        (function () {
+            'use strict';
 
-        document.getElementById('back').addEventListener('click', function () {
-           window.location.href = 'contrato.html';  
-        });   
-        // CONFIGURAÇÃO DO FIREBASE - SUBSTITUA PELOS SEUS VALORES
-        const firebaseConfig = {
-            apiKey: "AIzaSyCRH-aApTh2ZKUsyhzBUvtK3MnxFDvEfEA",
-            authDomain: "dlaw-manager.firebaseapp.com",
-            databaseURL: "https://dlaw-manager.firebaseio.com",
-            projectId: "dlaw-manager",
-            storageBucket: "dlaw-manager.firebasestorage.app",
-            messagingSenderId: "510108987774",
-            appId: "1:510108987774:web:b00cb80a0aa63f74"
-        };
+            const U = window.LocaUtils;
+            const C = window.LocaContrato;
+            const h = U.escapeHtml;
+            const $ = (id) => document.getElementById(id);
+            const COLECAO = 'loca-contratos';
 
-        // Inicializar Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+            // ---------- Ícones ----------
+            const svg = (d, s) => `<svg width="${s || 18}" height="${s || 18}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+            const ICONES = {
+                contrato: svg('<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>'),
+                mais: svg('<path d="M12 5v14M5 12h14"/>'),
+                texto: svg('<path d="M4 6h16M4 12h10M4 18h14"/>'),
+                casa: svg('<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>'),
+                menu: svg('<path d="M4 6h16M4 12h16M4 18h16"/>', 20),
+                busca: svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>', 17),
+                pdf: svg('<path d="M12 3v12"/><path d="M7 11l5 5 5-5"/><path d="M5 21h14"/>', 16),
+                olho: svg('<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>', 16),
+                lixo: svg('<path d="M4 7h16M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/>', 16),
+                fechar: svg('<path d="M6 6l12 12M18 6L6 18"/>', 18)
+            };
+            document.querySelectorAll('[data-icone]').forEach((el) => { el.innerHTML = ICONES[el.dataset.icone] || ''; });
 
-        let unsubscribe = null;
+            // ---------- Estado ----------
+            let registros = [];
+            let carregado = false;
+            let filtro = 'todos';
+            let busca = '';
+            let ordem = 'recentes';
+            let abertoId = null;
+            let ultimoFoco = null;
 
-        function mostrarLoading(show = true) {
-            document.getElementById('loading').style.display = show ? 'block' : 'none';
-            document.getElementById('results').style.display = show ? 'none' : 'block';
-            document.getElementById('noData').style.display = 'none';
-        }
+            const ROTULOS = {
+                agendado: 'Agendado', andamento: 'Em andamento', encerrado: 'Encerrado', legado: 'Registro antigo'
+            };
 
-        function mostrarErro(mensagem) {
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = `<div class="error">❌ Erro: ${mensagem}</div>`;
-            resultsDiv.style.display = 'block';
-            document.getElementById('loading').style.display = 'none';
-        }
+            // ---------- Utilidades ----------
+            const dinheiro = (v) => 'R$ ' + U.formatarMoeda(v);
+            const curto = (iso) => { const p = U.partesISO(iso); return p ? `${String(p.dia).padStart(2, '0')}/${String(p.mes).padStart(2, '0')}` : ''; };
+            const dataHora = (d) => d ? d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+            const nomeDe = (r) => (r.completo ? r.dados.locatario.nome : r.legado.nome) || 'Sem nome';
+            const iniciais = (n) => {
+                const p = String(n).trim().split(/\s+/).filter(Boolean);
+                return ((p[0] || '?')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+            };
+            const corAvatar = (n) => 'a' + ([...String(n)].reduce((a, c) => a + c.charCodeAt(0), 0) % 5);
+            const soDigitos = (s) => String(s || '').replace(/\D/g, '');
+            // "dd/mm/aaaa" (registros antigos) -> "aaaa-mm-dd"
+            const isoDeBR = (s) => { const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s || ''); return m ? `${m[3]}-${m[2]}-${m[1]}` : ''; };
+            const inicioISO = (r) => r.completo ? r.dados.locacao.dataInicio : isoDeBR(r.legado.data);
 
-        function mostrarSucesso(mensagem) {
-            const resultsDiv = document.getElementById('results');
-            const successDiv = document.createElement('div');
-            successDiv.className = 'success';
-            successDiv.innerHTML = `✅ ${mensagem}`;
-            resultsDiv.insertBefore(successDiv, resultsDiv.firstChild);
-            setTimeout(() => successDiv.remove(), 3000);
-        }
-
-        function formatarValor(valor) {
-            if (valor === null) return 'null';
-            if (valor === undefined) return 'undefined';
-            if (valor instanceof Date) return valor.toLocaleString('pt-BR');
-            if (typeof valor === 'object') return JSON.stringify(valor, null, 2);
-            if (typeof valor === 'boolean') return valor ? 'verdadeiro' : 'falso';
-            return String(valor);
-        }
-
-        function criarCardRegistro(doc) {
-            const data = doc.data();
-            const id = doc.id;
-
-            const card = document.createElement('div');
-            card.className = 'record-card';
-            card.innerHTML = `
-                 <span class="data-key" onclick="deletarDocumento('${id}')"> 🗑️ remover</span>
-                <div class="record-data">
-                    ${Object.entries(data).map(([key, value]) => `
-                        <div class="data-item">
-                            <span class="data-key">${key}:</span>
-                            <span class="data-value">${formatarValor(value)}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            return card;
-        }
-
-        function exibirRegistros(querySnapshot) {
-            const grid = document.getElementById('recordsGrid');
-            const count = document.getElementById('resultsCount');
-
-            grid.innerHTML = '';
-
-            if (querySnapshot.empty) {
-                document.getElementById('noData').style.display = 'block';
-                document.getElementById('results').style.display = 'none';
-                return;
+            function enriquecer() {
+                const hoje = U.hojeISO();
+                registros.forEach((r) => { r.sit = C.situacao(r, hoje); });
             }
 
-            count.textContent = `${querySnapshot.size} registro${querySnapshot.size !== 1 ? 's' : ''} encontrado${querySnapshot.size !== 1 ? 's' : ''}`;
+            function textoBusca(r) {
+                const partes = r.completo
+                    ? [r.dados.locatario.nome, r.dados.locatario.cpf, r.dados.locatario.rg, r.dados.locacao.descItens, r.dados.locacao.localRetirada]
+                    : [r.legado.nome, r.legado.itens];
+                return U.normalizar(partes.join(' '));
+            }
 
-            querySnapshot.forEach(doc => {
-                const card = criarCardRegistro(doc);
-                grid.appendChild(card);
+            function filtrados() {
+                const q = U.normalizar(busca);
+                const qDig = soDigitos(busca);
+                let lista = registros.filter((r) => {
+                    if (filtro !== 'todos' && r.sit.status !== filtro) return false;
+                    if (!q) return true;
+                    if (textoBusca(r).includes(q)) return true;
+                    return qDig.length >= 3 && r.completo && soDigitos(r.dados.locatario.cpf).includes(qDig);
+                });
+                const cmp = {
+                    recentes: (a, b) => (b.criadoEm ? b.criadoEm.getTime() : 0) - (a.criadoEm ? a.criadoEm.getTime() : 0),
+                    inicio: (a, b) => (inicioISO(b) || '').localeCompare(inicioISO(a) || ''),
+                    valor: (a, b) => (b.completo ? b.dados.locacao.valorAluguel : -1) - (a.completo ? a.dados.locacao.valorAluguel : -1),
+                    nome: (a, b) => nomeDe(a).localeCompare(nomeDe(b), 'pt-BR')
+                }[ordem];
+                return lista.sort(cmp);
+            }
+
+            // ---------- Desenho ----------
+            function desenharResumo() {
+                const total = registros.length;
+                const and = registros.filter((r) => r.sit.status === 'andamento').length;
+                const hoje = registros.filter((r) => r.sit.devolveHoje).length;
+                const soma = registros.reduce((s, r) => s + (r.completo ? r.dados.locacao.valorAluguel : 0), 0);
+                $('kpis').innerHTML = `
+                    <div class="kpi"><div class="rotulo">Contratos salvos</div><div class="valor">${total}</div></div>
+                    <div class="kpi"><div class="rotulo">Em andamento</div><div class="valor">${and}</div></div>
+                    <div class="kpi"><div class="rotulo">${hoje ? '<span class="ponto"></span>' : ''}Devoluções hoje</div><div class="valor">${hoje}</div></div>
+                    <div class="kpi"><div class="rotulo">Valor em contratos</div><div class="valor">${dinheiro(soma)}</div></div>`;
+                $('subtitulo').textContent = total === 1 ? '1 contrato salvo' : `${total} contratos salvos`;
+            }
+
+            function desenharChips() {
+                const conta = (s) => registros.filter((r) => r.sit.status === s).length;
+                const itens = [['todos', 'Todos', registros.length], ['andamento', 'Em andamento', conta('andamento')],
+                    ['agendado', 'Agendados', conta('agendado')], ['encerrado', 'Encerrados', conta('encerrado')],
+                    ['legado', 'Registros antigos', conta('legado')]];
+                $('chips').innerHTML = itens.filter(([k, , n]) => k === 'todos' || k === filtro || n > 0).map(([k, rot, n]) =>
+                    `<button type="button" class="chip" data-filtro="${k}" aria-pressed="${k === filtro}">${rot}<span class="n">${n}</span></button>`).join('');
+            }
+
+            function barra(sit) {
+                if (sit.status === 'legado') return '';
+                const cls = sit.devolveHoje ? 'hoje' : (sit.status === 'encerrado' ? 'fim' : '');
+                return `<div class="barra ${cls}" role="img" aria-label="${Math.round(sit.progresso * 100)}% do período"><i style="width:${Math.round(sit.progresso * 100)}%"></i></div>`;
+            }
+
+            function badge(sit) {
+                if (sit.devolveHoje) return '<span class="badge hoje">Devolve hoje</span>';
+                return `<span class="badge ${sit.status}">${ROTULOS[sit.status]}</span>`;
+            }
+
+            function linha(r) {
+                const nome = nomeDe(r);
+                const sit = r.sit;
+                let periodo;
+                let valor = '—';
+                let sub;
+                if (r.completo) {
+                    const l = r.dados.locacao;
+                    periodo = `<div class="datas">${curto(l.dataInicio)} → ${curto(sit.dataFim)}<span class="dur">${l.duracaoDias} ${l.duracaoDias === 1 ? 'dia' : 'dias'}</span></div>${barra(sit)}`;
+                    valor = dinheiro(l.valorAluguel);
+                    sub = r.dados.locatario.cpf ? `CPF ${h(r.dados.locatario.cpf)}` : h(l.localRetirada);
+                } else {
+                    periodo = `<div class="datas">${h(r.legado.data) || '—'}</div>`;
+                    sub = 'Só nome, data e itens foram guardados';
+                }
+                const podeGerar = r.completo;
+                return `<tr data-id="${h(r.id)}" tabindex="0" class="${r.id === abertoId ? 'sel' : ''}">
+                    <td class="c-cliente"><div class="cliente"><span class="avatar ${corAvatar(nome)}">${h(iniciais(nome))}</span><div><div class="nome">${h(nome)}</div><div class="sub">${sub}</div></div></div></td>
+                    <td class="c-periodo periodo">${periodo}</td>
+                    <td class="c-valor num">${valor}</td>
+                    <td class="c-status">${badge(sit)}</td>
+                    <td class="acoes">
+                        <button type="button" class="btn pequeno" data-acao="pdf" ${podeGerar ? '' : 'disabled title="Registro antigo: faltam dados para gerar de novo"'}>${ICONES.pdf} Gerar PDF</button>
+                        <button type="button" class="btn-icone" data-acao="excluir" aria-label="Excluir contrato de ${h(nome)}" title="Excluir">${ICONES.lixo}</button>
+                    </td></tr>`;
+            }
+
+            function desenharLista() {
+                const el = $('lista');
+                if (!carregado) {
+                    el.innerHTML = `<table><tbody>${'<tr class="esqueleto"><td><div style="width:70%"></div></td><td><div style="width:60%"></div></td><td><div style="width:50%"></div></td><td><div style="width:60%"></div></td><td></td></tr>'.repeat(5)}</tbody></table>`;
+                    return;
+                }
+                if (!registros.length) {
+                    el.innerHTML = `<div class="estado"><h2>Nenhum contrato salvo ainda</h2>
+                        <p>Ao gerar um contrato, deixe a chave "Salvar este contrato" ligada. Ele aparece aqui e pode ser gerado de novo com um clique.</p>
+                        <a class="btn primario" href="contrato.html">Criar contrato</a></div>`;
+                    return;
+                }
+                const lista = filtrados();
+                if (!lista.length) {
+                    el.innerHTML = `<div class="estado"><h2>Nenhum contrato encontrado</h2>
+                        <p>Nada corresponde à busca ou ao filtro escolhido.</p>
+                        <button class="btn" type="button" id="limparFiltros">Limpar busca e filtro</button></div>`;
+                    return;
+                }
+                el.innerHTML = `<table><thead><tr><th>Cliente</th><th>Período</th><th class="num">Valor</th><th>Situação</th><th></th></tr></thead><tbody>${lista.map(linha).join('')}</tbody></table>`;
+            }
+
+            function desenhar() {
+                enriquecer();
+                desenharResumo();
+                desenharChips();
+                desenharLista();
+                if (abertoId) {
+                    const r = registros.find((x) => x.id === abertoId);
+                    if (r) desenharDrawer(r); else fecharDrawer();
+                }
+            }
+
+            // ---------- Painel de detalhes ----------
+            function campo(rot, valor, largo) {
+                return `<div class="${largo ? 'largo' : ''}"><dt>${rot}</dt><dd>${valor ? h(valor) : '—'}</dd></div>`;
+            }
+
+            function desenharDrawer(r) {
+                const nome = nomeDe(r);
+                const sit = r.sit;
+                let corpo;
+                if (r.completo) {
+                    const l = r.dados.locacao;
+                    const lt = r.dados.locatario;
+                    corpo = `
+                        <section><h3>Locação</h3><dl class="campos">
+                            ${campo('Início', U.formatarDataBR(l.dataInicio))}
+                            ${campo('Devolução', U.formatarDataBR(sit.dataFim))}
+                            ${campo('Duração', `${l.duracaoDias} ${l.duracaoDias === 1 ? 'dia' : 'dias'}`)}
+                            ${campo('Valor do aluguel', dinheiro(l.valorAluguel))}
+                            ${campo('Local de retirada', l.localRetirada, true)}
+                        </dl></section>
+                        <section><h3>Itens alugados</h3><div class="texto-longo">${h(l.descItens)}</div></section>
+                        <section><h3>Locatário</h3><dl class="campos">
+                            ${campo('Nome', lt.nome, true)}
+                            ${campo('CPF', lt.cpf)}
+                            ${campo('RG', lt.rg)}
+                            ${campo('Endereço', lt.endereco, true)}
+                        </dl></section>
+                        <section><h3>Condições</h3><dl class="campos">
+                            ${campo('Multa por atraso', dinheiro(l.multaAtraso) + ' por dia')}
+                            ${campo('Contrato assinado em', `${U.formatarDataBR(l.dataContrato)} · ${l.cidade} - ${l.estado}`)}
+                        </dl><div class="texto-longo" style="margin-top:12px">${h(l.taxaDano)}</div></section>
+                        <section><h3>Histórico</h3><dl class="campos">
+                            ${campo('Salvo em', dataHora(r.criadoEm))}
+                            ${campo('PDF gerado', r.pdfCount ? `${r.pdfCount} ${r.pdfCount === 1 ? 'vez' : 'vezes'}` : '—')}
+                            ${campo('Último PDF', dataHora(r.ultimoPdfEm))}
+                        </dl></section>`;
+                } else {
+                    corpo = `
+                        <div class="aviso-legado"><strong>Registro antigo.</strong> Naquela época só o nome, a data e os itens eram guardados, então não dá para gerar o PDF de novo. Crie o contrato mais uma vez com a chave "Salvar este contrato" ligada para ter o registro completo.</div>
+                        <section><h3>O que foi guardado</h3><dl class="campos">
+                            ${campo('Nome', r.legado.nome)}
+                            ${campo('Data de início', r.legado.data)}
+                        </dl><div class="texto-longo" style="margin-top:12px">${h(r.legado.itens)}</div></section>`;
+                }
+                $('drawer').innerHTML = `
+                    <div class="drawer-topo">
+                        <span class="avatar ${corAvatar(nome)}">${h(iniciais(nome))}</span>
+                        <div><h2 id="drawerTitulo">${h(nome)}</h2><div class="meta">${badge(sit)}</div></div>
+                        <button type="button" class="fechar" data-acao="fechar" aria-label="Fechar detalhes">${ICONES.fechar}</button>
+                    </div>
+                    <div class="drawer-acoes">
+                        <button type="button" class="btn primario" data-acao="pdf-drawer" ${r.completo ? '' : 'disabled'}>${ICONES.pdf} Gerar contrato novamente</button>
+                        <button type="button" class="btn" data-acao="previa" ${r.completo ? '' : 'disabled'}>${ICONES.olho} Visualizar</button>
+                        <button type="button" class="btn" data-acao="excluir-drawer">${ICONES.lixo} Excluir</button>
+                    </div>
+                    <div class="drawer-corpo">${corpo}</div>`;
+            }
+
+            function abrirDrawer(id) {
+                const r = registros.find((x) => x.id === id);
+                if (!r) return;
+                ultimoFoco = document.activeElement;
+                abertoId = id;
+                desenharDrawer(r);
+                $('drawer').classList.add('aberto');
+                $('drawer').setAttribute('aria-hidden', 'false');
+                $('veu').classList.add('aberto');
+                document.querySelectorAll('tbody tr').forEach((tr) => tr.classList.toggle('sel', tr.dataset.id === id));
+                const fechar = $('drawer').querySelector('.fechar');
+                if (fechar) fechar.focus();
+            }
+
+            function fecharDrawer() {
+                abertoId = null;
+                $('drawer').classList.remove('aberto');
+                $('drawer').setAttribute('aria-hidden', 'true');
+                $('veu').classList.remove('aberto');
+                document.querySelectorAll('tbody tr.sel').forEach((tr) => tr.classList.remove('sel'));
+                if (ultimoFoco && document.contains(ultimoFoco)) ultimoFoco.focus();
+            }
+
+            // ---------- Ações ----------
+            async function regerarPDF(id, botao) {
+                const r = registros.find((x) => x.id === id);
+                if (!r || !r.completo) return;
+                const rotulo = botao.innerHTML;
+                botao.disabled = true;
+                botao.textContent = 'Gerando…';
+                try {
+                    await C.gerarPDF(r.dados);
+                    C.toast('PDF gerado novamente.');
+                    registrarGeracaoPdf(id).catch((e) => console.warn('Não foi possível registrar a geração:', e));
+                } catch (e) {
+                    console.error('Erro ao gerar o PDF:', e);
+                    C.toast('Não foi possível gerar o PDF: ' + (e.message || e), 'erro');
+                } finally {
+                    botao.innerHTML = rotulo;
+                    botao.disabled = false;
+                }
+            }
+
+            let excluirId = null;
+            function pedirExclusao(id) {
+                const r = registros.find((x) => x.id === id);
+                if (!r) return;
+                excluirId = id;
+                $('dlgExcluirTexto').textContent = `O contrato de ${nomeDe(r)} será removido do sistema. Essa ação não pode ser desfeita.`;
+                $('dlgExcluir').showModal();
+            }
+
+            async function confirmarExclusao() {
+                const id = excluirId;
+                const botao = $('dlgExcluirOk');
+                botao.disabled = true;
+                try {
+                    await db.collection(COLECAO).doc(id).delete();
+                    $('dlgExcluir').close();
+                    if (abertoId === id) fecharDrawer();
+                    C.toast('Contrato excluído.');
+                } catch (e) {
+                    console.error('Erro ao excluir:', e);
+                    $('dlgExcluir').close();
+                    C.toast('Não foi possível excluir: ' + (e.message || e), 'erro');
+                } finally {
+                    botao.disabled = false;
+                }
+            }
+
+            function mostrarPrevia(id) {
+                const r = registros.find((x) => x.id === id);
+                if (!r || !r.completo) return;
+                $('dlgPreviaTitulo').textContent = `Contrato de ${nomeDe(r)}`;
+                $('previa').innerHTML = C.gerarHTML(r.dados);
+                $('dlgPrevia').showModal();
+            }
+
+            // ---------- Eventos ----------
+            $('lista').addEventListener('click', (e) => {
+                const acao = e.target.closest('[data-acao]');
+                const tr = e.target.closest('tr[data-id]');
+                if (e.target.closest('#limparFiltros')) {
+                    busca = ''; filtro = 'todos'; $('busca').value = ''; desenhar(); return;
+                }
+                if (!tr) return;
+                if (acao && acao.dataset.acao === 'pdf') { regerarPDF(tr.dataset.id, acao); return; }
+                if (acao && acao.dataset.acao === 'excluir') { pedirExclusao(tr.dataset.id); return; }
+                abrirDrawer(tr.dataset.id);
+            });
+            $('lista').addEventListener('keydown', (e) => {
+                const tr = e.target.closest && e.target.closest('tr[data-id]');
+                if (tr && e.target === tr && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); abrirDrawer(tr.dataset.id); }
+            });
+            $('drawer').addEventListener('click', (e) => {
+                const acao = e.target.closest('[data-acao]');
+                if (!acao) return;
+                if (acao.dataset.acao === 'fechar') fecharDrawer();
+                if (acao.dataset.acao === 'pdf-drawer') regerarPDF(abertoId, acao);
+                if (acao.dataset.acao === 'previa') mostrarPrevia(abertoId);
+                if (acao.dataset.acao === 'excluir-drawer') pedirExclusao(abertoId);
+            });
+            $('veu').addEventListener('click', () => { fecharDrawer(); fecharMenu(); });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !document.querySelector('dialog[open]')) { fecharDrawer(); fecharMenu(); }
+            });
+            $('chips').addEventListener('click', (e) => {
+                const b = e.target.closest('[data-filtro]');
+                if (b) { filtro = b.dataset.filtro; desenhar(); }
+            });
+            $('busca').addEventListener('input', (e) => { busca = e.target.value; desenharLista(); });
+            $('ordem').addEventListener('change', (e) => { ordem = e.target.value; desenharLista(); });
+            $('dlgExcluirCancelar').addEventListener('click', () => $('dlgExcluir').close());
+            $('dlgExcluirOk').addEventListener('click', confirmarExclusao);
+            $('dlgPreviaFechar').addEventListener('click', () => $('dlgPrevia').close());
+
+            function fecharMenu() {
+                $('side').classList.remove('aberto');
+                $('menuBtn').setAttribute('aria-expanded', 'false');
+                if (!abertoId) $('veu').classList.remove('aberto');
+            }
+            $('menuBtn').addEventListener('click', () => {
+                const abrir = !$('side').classList.contains('aberto');
+                $('side').classList.toggle('aberto', abrir);
+                $('menuBtn').setAttribute('aria-expanded', String(abrir));
+                $('veu').classList.toggle('aberto', abrir);
             });
 
-            document.getElementById('results').style.display = 'block';
-            document.getElementById('noData').style.display = 'none';
-        }
-
-        async function carregarRegistros() {
-            const collection = document.getElementById('collection').value.trim();
-            const limit = document.getElementById('limit').value;
-            const orderBy = document.getElementById('orderBy').value.trim();
-            const orderDirection = document.getElementById('orderDirection').value;
-
-            if (!collection) {
-                mostrarErro('Por favor, informe o nome da coleção');
-                return;
+            // ---------- Dados em tempo real ----------
+            function mostrarErro(e) {
+                carregado = true;
+                const negado = e && e.code === 'permission-denied';
+                $('live').textContent = 'Offline';
+                $('live').classList.remove('on');
+                $('kpis').innerHTML = '';
+                $('lista').innerHTML = `<div class="estado erro"><h2>Não foi possível carregar os contratos</h2>
+                    <p>${negado ? 'O banco de dados recusou a leitura. Confira as regras de acesso do Firestore.' : 'Verifique a conexão com a internet e tente de novo.'}</p>
+                    <button class="btn" type="button" id="tentar">Tentar de novo</button></div>`;
+                $('tentar').addEventListener('click', iniciar);
             }
 
-            mostrarLoading(true);
-
-            try {
-                let query = db.collection(collection);
-
-                if (orderBy) {
-                    query = query.orderBy(orderBy, orderDirection);
+            let parar = null;
+            function iniciar() {
+                if (parar) parar();
+                carregado = false;
+                desenharLista();
+                try {
+                    parar = db.collection(COLECAO).onSnapshot((snap) => {
+                        registros = snap.docs.map((d) => C.deFirestore(d.id, d.data({ serverTimestamps: 'estimate' })));
+                        carregado = true;
+                        $('live').textContent = 'Ao vivo';
+                        $('live').classList.add('on');
+                        desenhar();
+                    }, (e) => { console.error('Erro ao ler contratos:', e); mostrarErro(e); });
+                } catch (e) {
+                    console.error(e);
+                    mostrarErro(e);
                 }
-
-                if (limit) {
-                    query = query.limit(parseInt(limit));
-                }
-
-                const querySnapshot = await query.get();
-                exibirRegistros(querySnapshot);
-                mostrarLoading(false);
-
-            } catch (error) {
-                console.error('Erro ao carregar registros:', error);
-                mostrarErro(error.message);
-                mostrarLoading(false);
-            }
-        }
-
-        function escutarMudancas() {
-            const collection = document.getElementById('collection').value.trim();
-
-            if (!collection) {
-                mostrarErro('Por favor, informe o nome da coleção');
-                return;
             }
 
-            if (unsubscribe) {
-                pararEscuta();
-            }
-
-            const limit = document.getElementById('limit').value;
-            const orderBy = document.getElementById('orderBy').value.trim();
-            const orderDirection = document.getElementById('orderDirection').value;
-
-            let query = db.collection(collection);
-
-            if (orderBy) {
-                query = query.orderBy(orderBy, orderDirection);
-            }
-
-            if (limit) {
-                query = query.limit(parseInt(limit));
-            }
-
-            unsubscribe = query.onSnapshot(
-                (querySnapshot) => {
-                    exibirRegistros(querySnapshot);
-                    mostrarLoading(false);
-
-                    // Mostrar mudanças
-                    querySnapshot.docChanges().forEach((change) => {
-                        if (change.type === "added") {
-                            console.log("Novo documento: ", change.doc.data());
-                        }
-                        if (change.type === "modified") {
-                            console.log("Documento modificado: ", change.doc.data());
-                        }
-                        if (change.type === "removed") {
-                            console.log("Documento removido: ", change.doc.data());
-                        }
-                    });
-                },
-                (error) => {
-                    console.error('Erro na escuta em tempo real:', error);
-                    mostrarErro(error.message);
-                }
-            );
-
-            document.getElementById('realTimeStatus').style.display = 'block';
-            document.getElementById('stopBtn').style.display = 'inline-flex';
-            mostrarSucesso('Escuta em tempo real ativada!');
-        }
-
-        function pararEscuta() {
-            if (unsubscribe) {
-                unsubscribe();
-                unsubscribe = null;
-                document.getElementById('realTimeStatus').style.display = 'none';
-                document.getElementById('stopBtn').style.display = 'none';
-                mostrarSucesso('Escuta em tempo real desativada!');
-            }
-        }
-
-        function limparResultados() {
-            document.getElementById('recordsGrid').innerHTML = '';
-            document.getElementById('results').style.display = 'none';
-            document.getElementById('noData').style.display = 'none';
-            document.getElementById('loading').style.display = 'none';
-            pararEscuta();
-        }
-
-        // Tecla Enter para carregar
-        document.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                carregarRegistros();
-            }
-        });
-
-        // Deletar documento
-        async function deletarDocumento(id) {
-            try {
-                await db.collection("loca-contratos").doc(id).delete();
-                console.log("Documento deletado com sucesso!");
-                carregarRegistros();
-            } catch (e) {
-                console.error("Erro ao deletar documento: ", e);
-            }
-        };
-
-
-        // Limpar escuta ao fechar a página
-        window.addEventListener('beforeunload', pararEscuta);
+            window.addEventListener('beforeunload', () => { if (parar) parar(); });
+            iniciar();
+        })();
     </script>
 </body>
 

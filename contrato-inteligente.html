@@ -12,6 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="./contratosFirebase.js"></script>
     <link rel="stylesheet" href="css/smart.css">
+    <link rel="stylesheet" href="css/salvar.css">
     <style>
         :root {
             --primary-color: #4CAF50;
@@ -413,6 +414,17 @@
                 </div>
             </div>
 
+            <label class="salvar-linha" for="salvar-contrato">
+                <span class="switch">
+                    <input type="checkbox" id="salvar-contrato" checked role="switch">
+                    <span class="slider"></span>
+                </span>
+                <span class="salvar-texto">
+                    <strong>Salvar este contrato</strong>
+                    <small class="salvar-ajuda"></small>
+                </span>
+            </label>
+
             <div class="buttons">
                 <button type="button" id="preview-btn">Visualizar Contrato</button>
                 <button type="button" id="generate-pdf-btn">Gerar PDF</button>
@@ -422,6 +434,16 @@
         <div id="preview-container">
             <div class="form-title">Pré-visualização do Contrato</div>
             <div id="contract-preview"></div>
+            <label class="salvar-linha" for="salvar-contrato-preview">
+                <span class="switch">
+                    <input type="checkbox" id="salvar-contrato-preview" checked role="switch">
+                    <span class="slider"></span>
+                </span>
+                <span class="salvar-texto">
+                    <strong>Salvar este contrato</strong>
+                    <small class="salvar-ajuda"></small>
+                </span>
+            </label>
             <div class="buttons">
                 <button type="button" id="back-to-form-btn">Voltar ao Formulário</button>
                 <button type="button" id="preview-generate-pdf-btn">Gerar PDF</button>
@@ -430,6 +452,7 @@
     </div>
 
     <script src="js/utils.js"></script>
+    <script src="js/contrato.js"></script>
     <script src="js/catalogo.js"></script>
     <script src="js/parser.js"></script>
     <script src="js/smart-ui.js"></script>
@@ -440,6 +463,7 @@
             const U = window.LocaUtils;
             const P = window.LocaParser;
             const UI = window.LocaUI;
+            const C = window.LocaContrato;
             const CHAVE_RASCUNHO = 'loca.contrato.texto';
             const EXEMPLO = 'Locatário João Silva, CPF 529.982.247-25, RG 1234567, Rua das Flores 10, Camaçari. 80 pratos com talheres, início 20/11 por 2 dias, retirada na Linha Verde, valor R$ 350';
             const $ = (id) => document.getElementById(id);
@@ -487,74 +511,28 @@
                     'Texto interpretado: confira os campos abaixo (verde = encontrado, laranja = revisar) e gere o contrato.');
             }
 
-            // ---------- Texto do contrato ----------
-            const esc = (s) => U.escapeHtml(s).replace(/\r?\n/g, '<br>');
+            // ---------- Salvar (chave) e geração do PDF ----------
+            const AJUDA_LIGADO = 'Fica guardado em "Ver contratos" para gerar de novo com um clique.';
+            const AJUDA_DESLIGADO = 'Só o PDF será gerado. Nada fica guardado no sistema.';
 
-            function gerarTextoContrato() {
-                const locadorNome = esc(val('locador-nome'));
-                const locadorNacionalidade = esc(val('locador-nacionalidade'));
-                const locadorEstadoCivil = esc(val('locador-estado-civil'));
-                const locadorCPF = esc(val('locador-cpf'));
-                const locadorRG = esc(val('locador-rg'));
-                const locadorEndereco = esc(val('locador-endereco'));
+            function deveSalvar() { return $('salvar-contrato').checked; }
 
-                const locatarioNome = esc(val('locatario-nome'));
-                const locatarioCPF = esc(val('locatario-cpf'));
-                const locatarioRG = esc(val('locatario-rg'));
-                const locatarioEndereco = esc(val('locatario-endereco'));
-
-                const descItens = esc(val('desc-itens').trim());
-                const dataInicio = val('data-inicio');
-                const duracaoDias = parseInt(val('duracao-dias'), 10) || 0;
-                const localRetirada = esc(val('local-retirada'));
-                const valorAluguel = parseFloat(val('valor-aluguel')) || 0;
-                const taxaDano = esc(val('taxa-dano').trim());
-                const multaAtraso = parseFloat(val('multa-atraso')) || 0;
-                const cidadeContrato = esc(val('cidade-contrato'));
-                const estadoContrato = esc(val('estado-contrato'));
-                const dataContrato = val('data-contrato');
-
-                const dataFim = U.somarDias(dataInicio, duracaoDias - 1);
-                const diasTxt = `${duracaoDias} (${U.numeroPorExtenso(duracaoDias)}) ${duracaoDias === 1 ? 'dia' : 'dias'}`;
-
-                return `
-                <div class="contract-title">CONTRATO DE LOCAÇÃO DE UTENSILIOS PARA EVENTOS</div>
-
-                <p>Pelo presente instrumento, de um lado, ${locadorNome}, ${locadorNacionalidade}, ${locadorEstadoCivil}, inscrita no CPF sob o nº ${locadorCPF} e no RG nº ${locadorRG}, residente e domiciliado(a) à ${locadorEndereco}, doravante denominado(a) LOCADOR(a) e de outro lado ${locatarioNome}, inscrito(a) no CPF sob o nº ${locatarioCPF} e no RG nº ${locatarioRG}, residente e domiciliado à ${locatarioEndereco}, doravante denominado LOCATÁRIO, têm, entre si, justo e acertado o presente contrato de locação de utensílios que se regerá pelas cláusulas e condições descritas a seguir.</p>
-
-                <p><strong>Cláusula 1ª.</strong> ${descItens}</p>
-
-                <p><strong>Cláusula 2ª.</strong> É vedado ao(à) LOCATÁRIO transferir, sublocar, ceder ou emprestar os bens ora locados a terceiros.</p>
-
-                <p><strong>Cláusula 3ª.</strong> A locação terá duração de ${diasTxt}, com início em ${U.formatarDataBR(dataInicio)}, quando os bens serão retirados pelo LOCATÁRIO no endereço indicado pelo LOCADOR, qual seja, ${localRetirada}, e finalizando no dia ${U.formatarDataBR(dataFim)} quando os bens serão entregues pelo LOCATÁRIO.</p>
-
-                <p><strong>Cláusula 4ª.</strong> O valor do aluguel será de R$ ${U.formatarMoeda(valorAluguel)} (${U.valorPorExtenso(valorAluguel)}), 50% sendo paga no ato lavrado deste contrato e 50% restantes a ser pago pelo(a) LOCATÁRIO no momento da entrega dos bens.</p>
-
-                <p><strong>Cláusula 5ª.</strong> Ao final da locação os bens deverão ser devolvidos pelo(a) LOCATÁRIO(a) nas mesmas condições de limpeza e conservação em que foram recebidos, sob pena de responder por perdas e danos além dos custos de limpeza.</p>
-
-                <p><strong>Cláusula 6ª.</strong> ${taxaDano}</p>
-
-                <p><strong>Cláusula 7ª.</strong> Caso o prazo para devolução dos bens, especificado na cláusula terceira, não seja respeitado pelo(a) LOCATÁRIO, que deixar de disponibilizar os bens para retirada, este(a) incorrerá em multa de R$ ${U.formatarMoeda(multaAtraso)} (${U.valorPorExtenso(multaAtraso)}) por dia de atraso.</p>
-
-                <p>Por estarem assim justos e contratados, firmam o presente instrumento em duas vias de igual teor.</p>
-
-                <p>${cidadeContrato} - ${estadoContrato}, ${U.formatarDataBR(dataContrato)}.</p>
-
-                <div class="signatures">
-                    <div class="signature-line">
-                        <div class="line"></div>
-                        <div>Assinatura do locador</div>
-                    </div>
-
-                    <div class="signature-line">
-                        <div class="line"></div>
-                        <div>Assinatura do locatário</div>
-                    </div>
-                </div>
-            `;
+            function atualizarChave(origem) {
+                const ligado = origem.checked;
+                $('salvar-contrato').checked = ligado;
+                $('salvar-contrato-preview').checked = ligado;
+                document.querySelectorAll('.salvar-ajuda').forEach((el) => {
+                    el.textContent = ligado ? AJUDA_LIGADO : AJUDA_DESLIGADO;
+                });
             }
 
-            // ---------- PDF ----------
+            function comTimeout(promessa, ms) {
+                return Promise.race([
+                    promessa,
+                    new Promise((_, rej) => setTimeout(() => rej(new Error('o servidor não respondeu a tempo')), ms))
+                ]);
+            }
+
             function formularioValido() {
                 const form = $('rental-form');
                 if (form.checkValidity()) return true;
@@ -562,57 +540,41 @@
                 return false;
             }
 
-            function gerarPDF() {
-                if (!formularioValido()) return;
-                const { jsPDF } = window.jspdf;
-                const descItens = val('desc-itens');
-                const dataInicio = val('data-inicio');
-
-                const printElement = document.createElement('div');
-                printElement.style.width = '210mm';
-                printElement.style.padding = '20mm';
-                printElement.style.backgroundColor = 'white';
-                printElement.style.position = 'absolute';
-                printElement.style.left = '-9999px';
-                printElement.style.textAlign = 'justify';
-                printElement.style.fontFamily = "'Times New Roman', Times, serif";
-                printElement.innerHTML = gerarTextoContrato();
-                document.body.appendChild(printElement);
-
-                html2canvas(printElement, { scale: 2, useCORS: true, logging: false }).then((canvas) => {
-                    document.body.removeChild(printElement);
-
-                    const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                    const pdf = new jsPDF('p', 'mm', 'a4');
-                    const pageWidth = pdf.internal.pageSize.getWidth();
-                    const pageHeight = pdf.internal.pageSize.getHeight();
-                    const imgWidth = pageWidth;
-                    const imgHeight = canvas.height * imgWidth / canvas.width;
-
-                    let heightLeft = imgHeight;
-                    let position = 0;
-                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                    while (heightLeft > 0) {
-                        position = heightLeft - imgHeight;
-                        pdf.addPage();
-                        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-                        heightLeft -= pageHeight;
-                    }
-
-                    const primeiroNome = val('locatario-nome').trim().split(' ')[0].replace(/[\\/:*?"<>|]+/g, '');
-                    pdf.save(`CONTRATO_${primeiroNome}_${U.hojeISO()}.pdf`);
-
-                    // Registro no Firestore (mesmo formato do contrato clássico, usado em "Ver contratos")
+            let gerando = false;
+            async function gerar() {
+                if (gerando || !formularioValido()) return;
+                gerando = true;
+                const botoes = document.querySelectorAll('#generate-pdf-btn, #preview-generate-pdf-btn');
+                botoes.forEach((b) => { b.disabled = true; });
+                const dados = C.lerFormulario(document);
+                try {
+                    await C.gerarPDF(dados);
+                } catch (e) {
+                    console.error('Erro ao gerar o PDF:', e);
+                    C.toast('Não foi possível gerar o PDF: ' + (e.message || e), 'erro');
+                    gerando = false;
+                    botoes.forEach((b) => { b.disabled = false; });
+                    return;
+                }
+                if (!deveSalvar()) {
+                    C.toast('PDF gerado. Este contrato não foi salvo.', 'aviso');
+                } else {
                     try {
-                        if (typeof adicionarDocumento === 'function') {
-                            adicionarDocumento(primeiroNome, U.formatarDataBR(dataInicio), descItens);
-                        }
+                        await comTimeout(salvarContrato(dados), 15000);
+                        C.toast('PDF gerado e contrato salvo em "Ver contratos".');
                     } catch (e) {
-                        console.error('Não foi possível registrar o contrato:', e);
+                        console.error('Erro ao salvar o contrato:', e);
+                        C.toast('PDF gerado, mas o contrato NÃO foi salvo: ' + (e.message || e), 'erro');
                     }
-                });
+                }
+                gerando = false;
+                botoes.forEach((b) => { b.disabled = false; });
             }
+
+            $('salvar-contrato').addEventListener('change', (e) => atualizarChave(e.target));
+            $('salvar-contrato-preview').addEventListener('change', (e) => atualizarChave(e.target));
+            atualizarChave($('salvar-contrato'));
+
 
             // ---------- Eventos ----------
             $('back').addEventListener('click', () => { window.location.href = 'index.html'; });
@@ -640,14 +602,14 @@
                 if (!formularioValido()) return;
                 $('rental-form').style.display = 'none';
                 $('preview-container').style.display = 'block';
-                $('contract-preview').innerHTML = gerarTextoContrato();
+                $('contract-preview').innerHTML = C.gerarHTML(C.lerFormulario(document));
             });
             $('back-to-form-btn').addEventListener('click', () => {
                 $('rental-form').style.display = 'block';
                 $('preview-container').style.display = 'none';
             });
-            $('generate-pdf-btn').addEventListener('click', gerarPDF);
-            $('preview-generate-pdf-btn').addEventListener('click', gerarPDF);
+            $('generate-pdf-btn').addEventListener('click', gerar);
+            $('preview-generate-pdf-btn').addEventListener('click', gerar);
             $('rental-form').addEventListener('submit', (e) => e.preventDefault());
 
             // ---------- Início ----------

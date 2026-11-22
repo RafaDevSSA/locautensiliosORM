@@ -11,6 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="./contratosFirebase.js"></script>
+    <link rel="stylesheet" href="css/salvar.css">
     <style>
         :root {
             --primary-color: #4CAF50;
@@ -383,6 +384,17 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
                 </div>
             </div>
 
+            <label class="salvar-linha" for="salvar-contrato">
+                <span class="switch">
+                    <input type="checkbox" id="salvar-contrato" checked role="switch">
+                    <span class="slider"></span>
+                </span>
+                <span class="salvar-texto">
+                    <strong>Salvar este contrato</strong>
+                    <small class="salvar-ajuda"></small>
+                </span>
+            </label>
+
             <div class="buttons">
                 <button type="button" id="back">voltar</button>
                 <button type="button" id="verContratos">Ver contratos</button>
@@ -394,6 +406,16 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
         <div id="preview-container">
             <div class="form-title">Pré-visualização do Contrato</div>
             <div id="contract-preview"></div>
+            <label class="salvar-linha" for="salvar-contrato-preview">
+                <span class="switch">
+                    <input type="checkbox" id="salvar-contrato-preview" checked role="switch">
+                    <span class="slider"></span>
+                </span>
+                <span class="salvar-texto">
+                    <strong>Salvar este contrato</strong>
+                    <small class="salvar-ajuda"></small>
+                </span>
+            </label>
             <div class="buttons">
                 <button type="button" id="back-to-form-btn">Voltar ao Formulário</button>
                 <button type="button" id="preview-generate-pdf-btn">Gerar PDF</button>
@@ -401,231 +423,103 @@ LOCADOR, que serão locadas ao LOCATÁRIO.
         </div>
     </div>
 
+    <script src="js/utils.js"></script>
+    <script src="js/contrato.js"></script>
     <script>
+    (function () {
+        'use strict';
 
+        const C = window.LocaContrato;
+        const U = window.LocaUtils;
+        const $ = (id) => document.getElementById(id);
 
-        let dataContrato = '';
-        let descItens = '';
-        let dataInicio = '';
-        // Funções auxiliares
-        function formatarValor(valor) {
-            return parseFloat(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
+        // ---------- Salvar (chave) e geração do PDF ----------
+        const AJUDA_LIGADO = 'Fica guardado em "Ver contratos" para gerar de novo com um clique.';
+        const AJUDA_DESLIGADO = 'Só o PDF será gerado. Nada fica guardado no sistema.';
 
-        function formatarData(data) {
-            const d = new Date(data);
-            const dia = (d.getDate() + 1).toString().padStart(2, '0');
-            const mes = (d.getMonth() + 1).toString().padStart(2, '0');
-            const ano = d.getFullYear();
-            return `${dia}/${mes}/${ano}`;
-        }
+        function deveSalvar() { return $('salvar-contrato').checked; }
 
-        function calcularDataFim(dataInicio, duracaoDias) {
-            const inicio = new Date(dataInicio);
-            const fim = new Date(inicio);
-            fim.setDate(inicio.getDate() + parseInt(duracaoDias) - 1);
-            return fim;
-        }
-
-        function valorPorExtenso(valor) {
-            if (valor === 0) return 'zero';
-
-            const unidades = ['', 'um', 'dois', 'três', 'quatro', 'cinco', 'seis', 'sete', 'oito', 'nove'];
-            const dezADezenove = ['dez', 'onze', 'doze', 'treze', 'quatorze', 'quinze', 'dezesseis', 'dezessete', 'dezoito', 'dezenove'];
-            const dezenas = ['', '', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa'];
-            const centenas = ['', 'cento', 'duzentos', 'trezentos', 'quatrocentos', 'quinhentos', 'seiscentos', 'setecentos', 'oitocentos', 'novecentos'];
-
-            const valorStr = Math.floor(valor).toString().padStart(3, '0');
-            let extenso = '';
-
-            // Centenas
-            if (valorStr === '100') return 'cem';
-            if (parseInt(valorStr[0]) > 0) {
-                extenso += centenas[parseInt(valorStr[0])];
-                if (parseInt(valorStr.substring(1)) > 0) extenso += ' e ';
-            }
-
-            // Dezenas e unidades
-            if (parseInt(valorStr.substring(1, 3)) > 0) {
-                if (parseInt(valorStr.substring(1, 3)) < 10) {
-                    extenso += unidades[parseInt(valorStr.substring(1, 3))];
-                } else if (parseInt(valorStr.substring(1, 3)) < 20) {
-                    extenso += dezADezenove[parseInt(valorStr.substring(1, 3)) - 10];
-                } else {
-                    extenso += dezenas[parseInt(valorStr[1])];
-                    if (parseInt(valorStr[2]) > 0) {
-                        extenso += ' e ' + unidades[parseInt(valorStr[2])];
-                    }
-                }
-            }
-
-            return extenso;
-        }
-
-        function gerarTextoContrato() {
-            // Obter valores do formulário
-            const locadorNome = document.getElementById('locador-nome').value;
-            const locadorNacionalidade = document.getElementById('locador-nacionalidade').value;
-            const locadorEstadoCivil = document.getElementById('locador-estado-civil').value;
-            const locadorCPF = document.getElementById('locador-cpf').value;
-            const locadorRG = document.getElementById('locador-rg').value;
-            const locadorEndereco = document.getElementById('locador-endereco').value;
-
-            const locatarioNome = document.getElementById('locatario-nome').value;
-            const locatarioCPF = document.getElementById('locatario-cpf').value;
-            const locatarioRG = document.getElementById('locatario-rg').value;
-            const locatarioEndereco = document.getElementById('locatario-endereco').value;
-
-            const dataAtual = new Date();
-            dataAtual.setDate(dataAtual.getDate() + 1);
-
-            descItens = document.getElementById('desc-itens').value;
-            dataInicio = document.getElementById('data-inicio').value
-            const duracaoDias = document.getElementById('duracao-dias').value;
-            const localRetirada = document.getElementById('local-retirada').value;
-            const valorAluguel = document.getElementById('valor-aluguel').value;
-            const taxaDano = document.getElementById('taxa-dano').value;
-            const multaAtraso = document.getElementById('multa-atraso').value;
-            const cidadeContrato = document.getElementById('cidade-contrato').value;
-            const estadoContrato = document.getElementById('estado-contrato').value;
-
-           /* const dataContratoInput = document.getElementById('data-contrato');
-           
-            dataContratoInput.valueAsDate = dataAtual;*/
-
-            dataContrato = document.getElementById('data-contrato').value;
-
-            // Calcular a data de fim
-            const dataFim = calcularDataFim(dataInicio, duracaoDias);
-
-            // Formatação dos valores numéricos por extenso
-            const valorAluguelExtenso = valorPorExtenso(valorAluguel);
-            const multaAtrasoExtenso = valorPorExtenso(multaAtraso);
-
-            // Montar o texto do contrato
-            const textoContrato = `
-                <div class="contract-title">CONTRATO DE LOCAÇÃO DE UTENSILIOS PARA EVENTOS</div>
-                
-                <p>Pelo presente instrumento, de um lado, ${locadorNome}, ${locadorNacionalidade}, ${locadorEstadoCivil}, inscrita no CPF sob o nº ${locadorCPF} e no RG nº ${locadorRG}, residente e domiciliado(a) à ${locadorEndereco}, doravante denominado(a) LOCADOR(a) e de outro lado ${locatarioNome}, inscrito(a) no CPF sob o nº ${locatarioCPF} e no RG nº ${locatarioRG}, residente e domiciliado à ${locatarioEndereco}, doravante denominado LOCATÁRIO, têm, entre si, justo e acertado o presente contrato de locação de utensílios que se regerá pelas cláusulas e condições descritas a seguir.</p>
-                
-                <p><strong>Cláusula 1ª.</strong> ${descItens}</p>
-                
-                <p><strong>Cláusula 2ª.</strong> É vedado ao(à) LOCATÁRIO transferir, sublocar, ceder ou emprestar os bens ora locados a terceiros.</p>
-                
-                <p><strong>Cláusula 3ª.</strong> A locação terá duração de ${duracaoDias} (${valorPorExtenso(duracaoDias)}) dias, com início em ${formatarData(dataInicio)}, quando os bens serão retirados pelo LOCATÁRIO no endereço indicado pelo LOCADOR, qual seja, ${localRetirada}, e finalizando no dia ${formatarData(dataFim)} quando os bens serão entregues pelo LOCATÁRIO.</p>
-                
-                <p><strong>Cláusula 4ª.</strong> O valor do aluguel será de R$ ${formatarValor(valorAluguel)} (${valorAluguelExtenso} reais), 50% sendo paga no ato lavrado deste contrato e 50% restantes a ser pago pelo(a) LOCATÁRIO no momento da entrega dos bens.</p>
-                
-                <p><strong>Cláusula 5ª.</strong> Ao final da locação os bens deverão ser devolvidos pelo(a) LOCATÁRIO(a) nas mesmas condições de limpeza e conservação em que foram recebidos, sob pena de responder por perdas e danos além dos custos de limpeza.</p>
-                
-                <p><strong>Cláusula 6ª.</strong>${taxaDano}</p>
-                
-                <p><strong>Cláusula 7ª.</strong> Caso o prazo para devolução dos bens, especificado na cláusula terceira, não seja respeitado pelo(a) LOCATÁRIO, que deixar de disponibilizar os bens para retirada, este(a) incorrerá em multa de R$ ${formatarValor(multaAtraso)} (${multaAtrasoExtenso} reais) por dia de atraso.</p>
-                
-                <p>Por estarem assim justos e contratados, firmam o presente instrumento em duas vias de igual teor.</p>
-                
-                <p>${cidadeContrato} - ${estadoContrato}, ${formatarData(dataContrato)}.</p>
-                
-                <div class="signatures">
-                    <div class="signature-line">
-                        <div class="line"></div>
-                        <div>Assinatura do locador</div>
-                    </div>
-                    
-                    <div class="signature-line">
-                        <div class="line"></div>
-                        <div>Assinatura do locatário</div>
-                    </div>
-                </div>
-            `;
-
-            return textoContrato;
-        }
-
-        // Event listeners
-        document.getElementById('back').addEventListener('click', function () {
-            window.location.href = 'index.html';  
-        });
-
-         document.getElementById('verContratos').addEventListener('click', function () {
-            window.location.href = 'lista-contratos.html';  
-        });
-        // Event listeners
-        document.getElementById('preview-btn').addEventListener('click', function () {
-            document.getElementById('rental-form').style.display = 'none';
-            document.getElementById('preview-container').style.display = 'block';
-            document.getElementById('contract-preview').innerHTML = gerarTextoContrato();
-        });
-
-        document.getElementById('back-to-form-btn').addEventListener('click', function () {
-            document.getElementById('rental-form').style.display = 'block';
-            document.getElementById('preview-container').style.display = 'none';
-        });
-
-        document.getElementById('generate-pdf-btn').addEventListener('click', function () {
-            generatePDF();
-        });
-
-        document.getElementById('preview-generate-pdf-btn').addEventListener('click', function () {
-            generatePDF();
-        });
-
-        function generatePDF() {
-            // Usar jsPDF para gerar o PDF
-            const { jsPDF } = window.jspdf;
-
-            // Preparar o conteúdo para impressão
-            const printElement = document.createElement('div');
-            printElement.style.width = '210mm';
-            printElement.style.padding = '20mm';
-            printElement.style.backgroundColor = 'white';
-            printElement.style.position = 'absolute';
-            printElement.style.left = '-9999px';
-            printElement.align = 'justify';
-            printElement.innerHTML = gerarTextoContrato();
-            document.body.appendChild(printElement);
-
-            // Capturar o conteúdo como imagem
-            html2canvas(printElement, {
-                scale: 2,
-                useCORS: true,
-                logging: false
-            }).then(canvas => {
-                // Remover o elemento temporário
-                document.body.removeChild(printElement);
-
-                const imgData = canvas.toDataURL('image/jpeg', 1.0);
-                const pdf = new jsPDF('p', 'mm', 'a4');
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
-                const imgWidth = pageWidth;
-                const imgHeight = canvas.height * imgWidth / canvas.width;
-
-                let heightLeft = imgHeight;
-                let position = 0;
-
-                // Adicionar primeira página
-                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-                heightLeft -= pageHeight;
-
-                // Adicionar páginas adicionais se necessário
-                while (heightLeft > 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= pageHeight;
-                }
-
-                // Obter os dados do locador e locatário para o nome do arquivo
-                const locadorNome = document.getElementById('locador-nome').value.split(' ')[0];
-                const locatarioNome = document.getElementById('locatario-nome').value.split(' ')[0];
-                const dataHoje = new Date().toISOString().slice(0, 10);
-
-                // Salvar o PDF
-                pdf.save(`CONTRATO_${locatarioNome}_${dataHoje}.pdf`);
-                adicionarDocumento(locatarioNome, formatarData(dataInicio), descItens);
+        function atualizarChave(origem) {
+            const ligado = origem.checked;
+            $('salvar-contrato').checked = ligado;
+            $('salvar-contrato-preview').checked = ligado;
+            document.querySelectorAll('.salvar-ajuda').forEach((el) => {
+                el.textContent = ligado ? AJUDA_LIGADO : AJUDA_DESLIGADO;
             });
         }
+
+        function comTimeout(promessa, ms) {
+            return Promise.race([
+                promessa,
+                new Promise((_, rej) => setTimeout(() => rej(new Error('o servidor não respondeu a tempo')), ms))
+            ]);
+        }
+
+        function formularioValido() {
+            const form = $('rental-form');
+            if (form.checkValidity()) return true;
+            form.reportValidity();
+            return false;
+        }
+
+        let gerando = false;
+        async function gerar() {
+            if (gerando || !formularioValido()) return;
+            gerando = true;
+            const botoes = document.querySelectorAll('#generate-pdf-btn, #preview-generate-pdf-btn');
+            botoes.forEach((b) => { b.disabled = true; });
+            const dados = C.lerFormulario(document);
+            try {
+                await C.gerarPDF(dados);
+            } catch (e) {
+                console.error('Erro ao gerar o PDF:', e);
+                C.toast('Não foi possível gerar o PDF: ' + (e.message || e), 'erro');
+                gerando = false;
+                botoes.forEach((b) => { b.disabled = false; });
+                return;
+            }
+            if (!deveSalvar()) {
+                C.toast('PDF gerado. Este contrato não foi salvo.', 'aviso');
+            } else {
+                try {
+                    await comTimeout(salvarContrato(dados), 15000);
+                    C.toast('PDF gerado e contrato salvo em "Ver contratos".');
+                } catch (e) {
+                    console.error('Erro ao salvar o contrato:', e);
+                    C.toast('PDF gerado, mas o contrato NÃO foi salvo: ' + (e.message || e), 'erro');
+                }
+            }
+            gerando = false;
+            botoes.forEach((b) => { b.disabled = false; });
+        }
+
+        $('salvar-contrato').addEventListener('change', (e) => atualizarChave(e.target));
+        $('salvar-contrato-preview').addEventListener('change', (e) => atualizarChave(e.target));
+        atualizarChave($('salvar-contrato'));
+
+        // ---------- Eventos ----------
+        $('back').addEventListener('click', () => { window.location.href = 'index.html'; });
+        $('verContratos').addEventListener('click', () => { window.location.href = 'lista-contratos.html'; });
+
+        $('preview-btn').addEventListener('click', () => {
+            if (!formularioValido()) return;
+            $('rental-form').style.display = 'none';
+            $('preview-container').style.display = 'block';
+            $('contract-preview').innerHTML = C.gerarHTML(C.lerFormulario(document));
+        });
+
+        $('back-to-form-btn').addEventListener('click', () => {
+            $('rental-form').style.display = 'block';
+            $('preview-container').style.display = 'none';
+        });
+
+        $('generate-pdf-btn').addEventListener('click', gerar);
+        $('preview-generate-pdf-btn').addEventListener('click', gerar);
+        $('rental-form').addEventListener('submit', (e) => e.preventDefault());
+
+        // Data do contrato começa em hoje (pode ser alterada)
+        if (!$('data-contrato').value) $('data-contrato').value = U.hojeISO();
+    })();
     </script>
 </body>
 
